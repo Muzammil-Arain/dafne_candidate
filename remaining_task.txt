@@ -1,0 +1,8 @@
+validation add krni hai auth profile or video ke screen pe.
+edit profile ki image or data update hoga redux ke sath.
+get job ki api lagni hain.
+auth profile ki screen pe video player add hoga.
+
+
+ERR
+statedata.getCertificate

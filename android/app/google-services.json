@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "396481992445",
+    "project_id": "talenton-candidate",
+    "storage_bucket": "talenton-candidate.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:396481992445:android:ffd29ee3f1f764ce19d094",
+        "android_client_info": {
+          "package_name": "com.talentonclient"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "396481992445-hkl1egt4d0jajc9b9c60tpie567hp7ht.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.talentonclient",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "396481992445-ibeee77atkdop9hng17t1i7qimkrd2eg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1dbq758xHnGsKEJKRD_gwgO6uRwW1AZw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "396481992445-ibeee77atkdop9hng17t1i7qimkrd2eg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
