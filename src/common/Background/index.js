@@ -20,6 +20,7 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 const Background = ({
   isDarkMode,
   showHeader,
+  maincontentContainer,
   scrollDisable,
   mainContainerStyle,
   showProfile,
@@ -51,7 +52,8 @@ const Background = ({
 
   return (
     <Animated.View
-      style={[mainContainerStyle,
+      style={[
+        mainContainerStyle,
         styles.container,
         {backgroundColor: interpolatedBackgroundColor},
       ]}>
@@ -103,12 +105,19 @@ const Background = ({
               style={styles.scrollView}
               showsVerticalScrollIndicator={false}
               nestedScrollEnabled={true}> */}
-            <KeyboardAwareScrollView 
-            innerRef={ref => {
-             console.log(ref);
-            }}
-            >
-              <View style={styles.contentContainer}>{children}</View>
+            <KeyboardAwareScrollView
+              innerRef={ref => {
+                console.log(ref);
+              }}
+              >
+              <View
+                style={[
+                  styles.contentContainer,
+                  maincontentContainer, // just add it directly
+                ]}>
+                {children}
+              </View>
+
               {/* </ScrollView> */}
             </KeyboardAwareScrollView>
           </SafeAreaView>

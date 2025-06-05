@@ -23,17 +23,21 @@ import {
 import {useDispatch} from 'react-redux';
 import {dateFormet, dateFormetchange} from '../authprofile/data';
 import moment from 'moment';
+import {useIsFocused} from '@react-navigation/native';
 
 const isDarkMode = datahandler.getAppTheme();
 
 const Where = ({navigation, route}) => {
   const dispatch = useDispatch();
-  const {perID, key} = route?.params ?? '';
+  const {perID, jobsData} = route?.params ?? '';
+  console.log('🚀 ~ Where ~ jobsData:', jobsData?.Availablity_to_start);
+  const isfoucsed = useIsFocused();
 
   const [statedata, setStateData] = useState({
     isBackgound: true,
     getState: [],
   });
+  console.log("🚀 ~ Where ~ statedata:", statedata)
 
   const [formData, setFormData] = useState({
     location: '',
@@ -46,7 +50,7 @@ const Where = ({navigation, route}) => {
       startDate: '',
     },
   });
-  console.log('🚀 ~ Where ~ formData:', formData.startDate);
+  console.log("🚀 ~ Where ~formData.startDate formData:", formData.startDate)
 
   useLayoutEffect(() => {
     navigation.setOptions(
@@ -60,61 +64,44 @@ const Where = ({navigation, route}) => {
   }, [navigation, isDarkMode]);
 
   useEffect(() => {
-    handleGetAPISData();
-  }, [navigation]);
-
-  const handleGetAPISData = async () => {
-    const apiRequests = [
-      {
-        action: GET_STATE_API,
-        key: 'getState',
-        params: 167,
+    fetchAndUpdateState();
+    setFormData(prev => ({
+      ...prev,
+      location: {
+        name: jobsData?.location_for_job,
+        id: jobsData?.location_id,
       },
-      // {
-      //   action: GET_EMPLOYMENT_API,
-      //   key: 'getEmployment',
-      //   transform: val => ({...val, name: val.employment_type}),
-      // },
-      // {
-      //   action: GET_JOB_API,
-      //   key: 'getJob',
-      //   transform: val => ({...val, name: val.job_title}),
-      // },
-      // {
-      //   action: GET_EXPERIENCE_API,
-      //   key: 'getexperience',
-      // },
-    ];
+      currentLocation: {
+        name: jobsData?.current_location,
+        id: jobsData?.current_location_id,
+      },
+      startDate: moment(jobsData?.Availablity_to_start, 'MM-DD-YYYY').format(
+        dateFormet,
+      ),
+      relocate: jobsData?.willing_to_relocate == 1 ? true : false,
+    }));
+  }, [navigation, isfoucsed]);
 
-    for (const req of apiRequests) {
-      await fetchAndUpdateState(req);
-      await new Promise(res => setTimeout(res, 300));
-    }
-  };
-
-  const fetchAndUpdateState = ({action, key, transform, params}) => {
-    return new Promise(resolve => {
-      dispatch(
-        action.request({
-          payloadApi: {},
-          params: params,
-          cb: res => {
-            const updatedData = transform ? res?.map(transform) : res;
-            setStateData(prev => ({...prev, [key]: updatedData}));
-            console.log(`✅ ${key} API Response:`, res);
-            resolve();
-          },
-        }),
-      );
-    });
+  const fetchAndUpdateState = () => {
+    dispatch(
+      GET_STATE_API.request({
+        payloadApi: {},
+        params: 167,
+        cb: res => {
+          setStateData(prev => ({...prev, getState: res}));
+        },
+      }),
+    );
   };
 
   const validateForm = () => {
     let errors = {};
     if (!formData.location) errors.location = 'Please select a location';
-    if (!formData.currentLocation)
-      errors.currentLocation = 'Please select your current location';
-    if (!formData.startDate) errors.startDate = 'Please select a start date';
+    // if (statedata.isBackgound || !formData.currentLocation)
+    //   errors.currentLocation = 'Please select your current location';
+    if (!jobsData?.Availablity_to_start && !formData.startDate) {
+      errors.startDate = 'Please select a start date';
+    }
 
     setFormData(prev => ({...prev, errors}));
     return Object.keys(errors).length === 0;
@@ -124,22 +111,18 @@ const Where = ({navigation, route}) => {
     if (!validateForm()) return;
 
     const payload = new FormData();
+    console.log('🚀 ~ onSubmit ~ payload:', payload);
     payload.append('preferable_industry_id', perID ?? '1');
     payload.append('location_for_job', formData.location.id);
-    payload.append('current_location', formData.currentLocation.id);
+    formData.currentLocation.id &&
+      payload.append('current_location', formData.currentLocation.id);
     payload.append(
       'Availablity_to_start',
-      moment(formData.startDate).format(dateFormetchange),
+      jobsData?.Availablity_to_start ??
+        moment(formData.startDate).format('MMM Do YY'),
     );
+
     payload.append('willing_to_relocate', statedata.isBackgound ? 1 : 0);
-    // if (route?.params?.key === false) {
-    //   NavigationService.navigate(StackNav.What, { perID: perID });
-    // } else {
-    //   NavigationService.push(StackNav.CompleteProfile, {
-    //     value: '75%',
-    //   });
-    // }
-    // return;
     dispatch(
       PREFERABLE_LOCATION_API.request({
         payloadApi: payload,
@@ -147,7 +130,10 @@ const Where = ({navigation, route}) => {
           const isNewProject = datahandler.getisNewProject();
           const isFromKeyFalse = route?.params?.key == false;
 
-          if (isNewProject) {
+          if (jobsData) {
+            NavigationService.navigate('AppStack', {key: true});
+            return;
+          } else if (isNewProject) {
             const formData = new FormData();
             formData.append('percentage', `AppStack`);
 
@@ -161,9 +147,7 @@ const Where = ({navigation, route}) => {
               }),
             );
             return;
-          }
-
-          if (isFromKeyFalse) {
+          } else if (isFromKeyFalse) {
             const formData = new FormData();
             formData.append('percentage', `What / ${true} / ${perID}`);
 
@@ -179,19 +163,18 @@ const Where = ({navigation, route}) => {
               }),
             );
             return;
+          } else {
+            const formData = new FormData();
+            formData.append('percentage', 'UploadProfile');
+
+            await dispatch(
+              PROFILE_PERCENTAGE_API.request({
+                payloadApi: formData,
+              }),
+            );
+
+            NavigationService.push(StackNav.CompleteProfile, {value: '75%'});
           }
-
-          // Default case
-          const formData = new FormData();
-          formData.append('percentage', 'UploadProfile');
-
-          await dispatch(
-            PROFILE_PERCENTAGE_API.request({
-              payloadApi: formData,
-            }),
-          );
-
-          NavigationService.push(StackNav.CompleteProfile, {value: '75%'});
         },
       }),
     );
@@ -199,6 +182,49 @@ const Where = ({navigation, route}) => {
 
   return (
     <Background isDarkMode={isDarkMode}>
+      <View style={styles.cardContainer}>
+        <ScaleText
+          isDarkMode={isDarkMode}
+          fontSize={ms(14)}
+          fontFamily={Fonts.type.Mediu}
+          text={'Would you be willing to relocate for this position?'}
+        />
+        <View style={styles.buttonGroup}>
+          <ButtonView
+            onPress={() =>  setStateData(prev => ({...prev, isBackgound: true}))}
+            style={[
+              styles.button,
+              {
+                backgroundColor: statedata.isBackgound
+                  ? Colors.Yellow
+                  : Colors.White_F8,
+              },
+            ]}>
+            <ScaleText
+              color={statedata.isBackgound ? Colors.White : Colors.Black_02}
+              textAlign={'center'}
+              text={'Yes'}
+            />
+          </ButtonView>
+          <ButtonView
+            onPress={() => setStateData(prev => ({...prev, isBackgound: false}))}
+            style={[
+              styles.button,
+              {
+                backgroundColor: !statedata.isBackgound
+                  ? Colors.Yellow
+                  : Colors.White_F8,
+              },
+            ]}>
+            <ScaleText
+              color={!statedata.isBackgound ? Colors.White : Colors.Black_02}
+              textAlign={'center'}
+              text={'No'}
+            />
+          </ButtonView>
+        </View>
+      </View>
+
       <CustomDropdown
         isDarkMode={isDarkMode}
         value={formData.location.name}
@@ -219,19 +245,21 @@ const Where = ({navigation, route}) => {
         />
       ) : null}
 
-      <CustomDropdown
-        isDarkMode={isDarkMode}
-        value={formData.currentLocation.name}
-        label="Where are you currently located?"
-        data={statedata.getState}
-        selectedValue={value =>
-          setFormData(prev => ({
-            ...prev,
-            currentLocation: value,
-            errors: {...prev.errors, currentLocation: ''},
-          }))
-        }
-      />
+      {statedata.isBackgound && (
+        <CustomDropdown
+          isDarkMode={isDarkMode}
+          value={formData.currentLocation.name}
+          label="Where are you currently located?"
+          data={statedata.getState}
+          selectedValue={value =>
+            setFormData(prev => ({
+              ...prev,
+              currentLocation: value,
+              errors: {...prev.errors, currentLocation: ''},
+            }))
+          }
+        />
+      )}
       {formData.errors.currentLocation ? (
         <ScaleText
           TextStyle={styles.errStyle}
@@ -242,7 +270,11 @@ const Where = ({navigation, route}) => {
       <CustomDropdown
         minimumDate={new Date()}
         isDarkMode={isDarkMode}
-        value={moment(formData.startDate).format(dateFormet)}
+        value={
+          jobsData?.Availablity_to_start ?
+          moment(formData.startDate).format(dateFormet):
+          moment().format(dateFormet)
+        }
         label="Availability to start work?"
         data={dummyDropdownData}
         type={false}
@@ -261,49 +293,6 @@ const Where = ({navigation, route}) => {
         />
       ) : null}
 
-      <View style={styles.cardContainer}>
-        <ScaleText
-          isDarkMode={isDarkMode}
-          fontSize={ms(14)}
-          fontFamily={Fonts.type.Mediu}
-          text={'Would you be willing to relocate for this position?'}
-        />
-        <View style={styles.buttonGroup}>
-          <ButtonView
-            onPress={() => setStateData({isBackgound: true})}
-            style={[
-              styles.button,
-              {
-                backgroundColor: statedata.isBackgound
-                  ? Colors.Yellow
-                  : Colors.White_F8,
-              },
-            ]}>
-            <ScaleText
-              color={statedata.isBackgound ? Colors.White : Colors.Black_02}
-              textAlign={'center'}
-              text={'Yes'}
-            />
-          </ButtonView>
-          <ButtonView
-            onPress={() => setStateData({isBackgound: false})}
-            style={[
-              styles.button,
-              {
-                backgroundColor: !statedata.isBackgound
-                  ? Colors.Yellow
-                  : Colors.White_F8,
-              },
-            ]}>
-            <ScaleText
-              color={!statedata.isBackgound ? Colors.White : Colors.Black_02}
-              textAlign={'center'}
-              text={'No'}
-            />
-          </ButtonView>
-        </View>
-      </View>
-
       <View style={{marginTop: ms(160)}}>
         <AppButton
           type={'PREFERABLE_LOCATION'}
@@ -318,9 +307,7 @@ const Where = ({navigation, route}) => {
 export default Where;
 
 const styles = ScaledSheet.create({
-  cardContainer: {
-    marginVertical: ms(20),
-  },
+  cardContainer: {},
   buttonGroup: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -347,6 +334,7 @@ const styles = ScaledSheet.create({
     shadowRadius: '3.84@ms', // Scaled shadow radius
     marginTop: '20@ms', // Scaled margin top
     flex: 1,
+    marginBottom: '30@ms',
   },
   buttonGroup: {
     flexDirection: 'row',

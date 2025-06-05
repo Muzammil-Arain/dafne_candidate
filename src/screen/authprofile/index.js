@@ -156,7 +156,7 @@ const AuthProfile = ({navigation}) => {
   }, [navigation, statedata.currentStep]);
 
   console.log('====================================');
-  console.log(statedata.getCertificate, 'statedata statedata statedata');
+  console.log(statedata, 'statedata statedata statedata');
   console.log('====================================');
 
   const handleNext = index => {
@@ -168,7 +168,175 @@ const AuthProfile = ({navigation}) => {
 
   useEffect(() => {
     handleGetAPISData();
+    getLocalData();
   }, [navigation]);
+
+  const getLocalData = async () => {
+    try {
+      const Experience = await AsyncStorage.getItem('Experience');
+      const Education = await AsyncStorage.getItem('Education');
+      const Passport = await AsyncStorage.getItem('Passport');
+      const language = await AsyncStorage.getItem('language');
+      const Visa = await AsyncStorage.getItem('Visa');
+      const Skills = await AsyncStorage.getItem('Skills');
+
+      const parsedExperience = JSON.parse(Experience || '[]');
+      const parsedEducation = JSON.parse(Education || '[]');
+      const parsedPassport = JSON.parse(Passport || '[]');
+      const parsedVisa = JSON.parse(Visa || '[]');
+      const parsedlanguage = JSON.parse(language || '[]');
+      const parsedSkills = JSON.parse(Skills || '[]');
+
+      console.log('====================================');
+      console.log(parsedSkills, 'Parsed Skills');
+      console.log('====================================');
+
+      const filledExperiences = parsedExperience.map(item => ({
+        industry: {
+          id: item?.industry?.id || '',
+          name: item?.industry?.name || '',
+        },
+        employmentType: {
+          id: item?.employmentType?.id || '',
+          name: item?.employmentType?.employment_type || '',
+        },
+        jobTitle: {
+          id: item?.jobTitle?.id || '',
+          name: item?.jobTitle?.job_title || '',
+        },
+        companyName: item?.companyName || '',
+        location: item?.location || '',
+        startDate: item?.startDate || '',
+        endDate: item?.endDate || '',
+        still_working: item?.currently_working == 1,
+      }));
+
+      const filledEducation = parsedEducation?.map(item => {
+        return {
+          school: item?.school || '',
+          degree: {
+            name: item?.degree?.name || '',
+            id: item?.degree?.id,
+          },
+          field: item?.field || '',
+          startDate: item?.startDate || '',
+          endDate: item?.endDate || '',
+        };
+      });
+
+      const filledPassport = parsedPassport.map(item => ({
+        passport: {
+          name: item.passport?.full_name,
+          id: item.passport?.id,
+        },
+        dateofexp: item.dateofexp,
+      }));
+
+      const filledVisa = parsedVisa.map(item => ({
+        visa: {
+          name: item.visa?.name,
+          id: item.visa?.id,
+        },
+        dateofexp: item.dateofexp || '',
+      }));
+
+      const filledLanguage = parsedlanguage?.map((item, index) => ({
+        language: {
+          name: item?.language?.name,
+          id: item?.language?.id,
+        },
+      }));
+
+      const filledSkill = parsedSkills?.map((item, index) => ({
+        skill: {
+          name: item?.skill?.name,
+          id: item?.skill?.id,
+        },
+      }));
+      console.log(
+        '🚀 ~ filledSkill ~ filledSkill:',
+        filledSkill.length == 0 ? true : false,
+      );
+
+      setStateData(prev => ({
+        ...prev,
+        currentStep: filledSkill.length !== 0
+          ? 5
+          : filledLanguage.length !== 0
+          ? 4
+          : filledVisa.length !== 0
+          ? 3
+          : filledEducation.length !== 0
+          ? 2
+          : filledExperiences.length !== 0
+          ? 1
+          : 0,
+        Experience:
+          filledExperiences.length == 0
+            ? [
+                {
+                  industry: '',
+                  employmentType: '',
+                  jobTitle: '',
+                  companyName: '',
+                  location: '',
+                  startDate: '',
+                  endDate: '',
+                  currently_working: null,
+                },
+              ]
+            : filledExperiences,
+        Education:
+          filledEducation.length === 0
+            ? [
+                {
+                  school: '',
+                  degree: '',
+                  field: '',
+                  startDate: '',
+                  endDate: '',
+                },
+              ]
+            : filledEducation,
+        Passport:
+          filledPassport.length == 0
+            ? [
+                {
+                  passport: '',
+                  dateofexp: '',
+                },
+              ]
+            : filledPassport,
+        Visa:
+          filledVisa.length == 0
+            ? [
+                {
+                  visa: '',
+                  dateofexp: '',
+                },
+              ]
+            : filledVisa,
+        language:
+          filledLanguage.length == 0
+            ? [
+                {
+                  language: '',
+                },
+              ]
+            : filledLanguage,
+        Skills:
+          filledSkill.length == 0
+            ? [
+                {
+                  skill: '',
+                },
+              ]
+            : filledSkill,
+      }));
+    } catch (error) {
+      console.error('Error parsing Experience data:', error);
+    }
+  };
 
   const handleGetAPISData = async () => {
     const apiBatches = [
@@ -330,6 +498,19 @@ const AuthProfile = ({navigation}) => {
       return;
     }
 
+    // for (let i = 0; i < Experience.length; i++) {
+    //   const exp = Experience[i];
+    //   console.log("🚀 ~ AuthProfile ~ exp:", exp)
+
+    //   if (!exp.industry?.id) {
+    //     Util.showMessage(
+    //       `Please select Industry for Experience ${i + 1}`,
+    //       'danger',
+    //     );
+    //     return;
+    //   }
+    // }
+
     const handlepayload = {
       industry_id: Experience.map(exp => exp.industry.id),
       employment_type_id: Experience.map(exp => exp.employmentType.id),
@@ -348,6 +529,7 @@ const AuthProfile = ({navigation}) => {
         cb: res => {
           handleNext(id);
           changeSteps(id + 1);
+          AsyncStorage.setItem('Experience', JSON.stringify(Experience));
           Util.showMessage('Experience has been added successfully', 'success');
         },
       }),
@@ -375,6 +557,7 @@ const AuthProfile = ({navigation}) => {
       EDUCATION_API.request({
         payloadApi: handlepayload,
         cb: res => {
+          AsyncStorage.setItem('Education', JSON.stringify(Education));
           Util.showMessage('Education details added successfully', 'success');
           handleNext(id);
           changeSteps(id + 1);
@@ -385,28 +568,31 @@ const AuthProfile = ({navigation}) => {
 
   const handleAddPassportApi = async id => {
     const {Passport, Visa} = statedata;
+    console.log('🚀 ~ AuthProfile ~ Visa.lengt:', Visa?.[0]?.visa);
 
     if (!Passport || Passport.length === 0) {
       console.warn('No Passport data found');
       return;
     }
     const handlepayload = {
-      passport_country_id: Passport.map(exp => exp.passport.id),
-      // passport_issue_date: Passport.map(exp => exp.passport),
-      passport_expiry_date: Passport.map(exp => exp.dateofexp),
-      visa_country_id: Visa.map(exp => exp.visa.id),
-      // visa_issue_date: Visa.map(exp => exp.endDate),
-      visa_expiry_date: Visa.map(exp => exp.dateofexp),
+      passport_country_id: Passport.map(item => item.passport?.id || null),
+      passport_expiry_date: Passport.map(item => item.dateofexp || null),
+      ...(Visa?.[0]?.visa !== '' && {
+        visa_country_id: Visa.map(item => item.visa?.id),
+        visa_expiry_date: Visa.map(item => item.dateofexp),
+      }),
     };
 
     dispatch(
       PASSPORT_VISA_API.request({
         payloadApi: handlepayload,
         cb: res => {
-          Util.showMessage(
-            'Passport/Visa details added successfully',
-            'success',
-          );
+          AsyncStorage.setItem('Passport', JSON.stringify(Passport)),
+            AsyncStorage.setItem('Visa', JSON.stringify(Visa)),
+            Util.showMessage(
+              'Passport/Visa details added successfully',
+              'success',
+            );
           handleNext(id);
           changeSteps(id + 1);
         },
@@ -430,6 +616,7 @@ const AuthProfile = ({navigation}) => {
       LANGUAGE_API.request({
         payloadApi: handlepayload,
         cb: res => {
+          AsyncStorage.setItem('language', JSON.stringify(language));
           Util.showMessage('Language added successfully', 'success');
           handleNext(id);
           changeSteps(id + 1);
@@ -455,6 +642,7 @@ const AuthProfile = ({navigation}) => {
       SKILLS_API.request({
         payloadApi: handlepayload,
         cb: res => {
+          AsyncStorage.setItem('Skills', JSON.stringify(Skills));
           Util.showMessage('Skills added successfully', 'success');
           handleNext(id);
           changeSteps(id + 1);
@@ -510,9 +698,8 @@ const AuthProfile = ({navigation}) => {
       const isSelected = statedata.selectedExpId === expIndex;
       return (
         <View key={expIndex}>
-          {isSelected ? (
-            <View>
-              <ButtonView
+          <View style={{width: ms(275)}}>
+            {/* <ButtonView
                 onPress={() => {
                   let index = expIndex;
                   if (statedata.selectedExpId == expIndex) {
@@ -531,7 +718,7 @@ const AuthProfile = ({navigation}) => {
                   <ScaleText
                     isDarkMode={isDarkMode}
                     fontSize={ms(15)}
-                    text={`Experience No ${expIndex + 1}`}
+                    // text={`Experience No ${expIndex + 1}`}
                   />
                   <VectorIcon
                     type="FontAwesome"
@@ -540,173 +727,142 @@ const AuthProfile = ({navigation}) => {
                     color={isDarkMode ? Colors.Whiite_B8 : Colors.Black_55}
                   />
                 </View>
+              </ButtonView> */}
+            {statedata.Experience.length > 1 && (
+              <ButtonView onPress={() => handleRemoveExperience(expIndex)}>
+                <ScaleText
+                  TextStyle={{marginRight: ms(10)}}
+                  textAlign={'right'}
+                  fontSize={ms(12)}
+                  color={Colors.Red}
+                  text={'Delete'}
+                />
               </ButtonView>
-              {statedata.Experience.length > 1 && (
-                <ButtonView onPress={() => handleRemoveExperience(expIndex)}>
-                  <ScaleText
-                    TextStyle={{marginRight: ms(10)}}
-                    textAlign={'right'}
-                    fontSize={ms(12)}
-                    color={Colors.Red}
-                    text={'Delete'}
-                  />
-                </ButtonView>
-              )}
-              <View style={styles.row}>
-                <CustomDropdown
-                  isDarkMode={isDarkMode}
-                  value={experience.industry.name}
-                  label="Select Industry"
-                  selectedValue={value =>
-                    handleFieldChange(expIndex, 'industry', value)
-                  }
-                  mainContainerStyle={styles.dropdownStyle}
-                  data={statedata.getIndustryData}
-                  // data={statedata.getSkills}
-                  name={'industry_name'}
-                />
-                <CustomDropdown
-                  isDarkMode={isDarkMode}
-                  value={experience.employmentType.name}
-                  label="Employment Type"
-                  selectedValue={value =>
-                    handleFieldChange(expIndex, 'employmentType', value)
-                  }
-                  mainContainerStyle={styles.dropdownStyle}
-                  data={statedata.getEmployment}
-                  // data={statedata.getSkills}
-                />
-              </View>
+            )}
+            <View style={styles.row}>
               <CustomDropdown
                 isDarkMode={isDarkMode}
-                value={experience.jobTitle.name}
-                label="Job Title"
+                value={experience.industry.name}
+                label="Select Industry"
                 selectedValue={value =>
-                  handleFieldChange(expIndex, 'jobTitle', value)
+                  handleFieldChange(expIndex, 'industry', value)
                 }
-                data={statedata.getJob}
+                mainContainerStyle={styles.dropdownStyle}
+                data={statedata.getIndustryData}
+                // data={statedata.getSkills}
+                name={'industry_name'}
+              />
+              <CustomDropdown
+                isDarkMode={isDarkMode}
+                value={experience.employmentType.name}
+                label="Employment Type"
+                selectedValue={value =>
+                  handleFieldChange(expIndex, 'employmentType', value)
+                }
+                mainContainerStyle={styles.dropdownStyle}
+                data={statedata.getEmployment}
                 // data={statedata.getSkills}
               />
-              <TextInputCustom
-                optional={true}
-                isDarkMode={isDarkMode}
-                placeholder="Enter Company Name"
-                label="Company Name"
-                value={experience.companyName}
-                onChangeText={text =>
-                  setStateData(prev => {
-                    const updatedExperience = [...prev.Experience];
-                    updatedExperience[expIndex].companyName = text;
-                    return {...prev, Experience: updatedExperience};
-                  })
-                }
-              />
+            </View>
+            <CustomDropdown
+              isDarkMode={isDarkMode}
+              value={experience.jobTitle.name}
+              label="Job Title"
+              selectedValue={value =>
+                handleFieldChange(expIndex, 'jobTitle', value)
+              }
+              data={statedata.getJob}
+              // data={statedata.getSkills}
+            />
+            <TextInputCustom
+              optional={true}
+              isDarkMode={isDarkMode}
+              placeholder="Enter Company Name"
+              label="Company Name"
+              value={experience.companyName}
+              onChangeText={text =>
+                setStateData(prev => {
+                  const updatedExperience = [...prev.Experience];
+                  updatedExperience[expIndex].companyName = text;
+                  return {...prev, Experience: updatedExperience};
+                })
+              }
+            />
 
-              <TextInputCustom
-                optional={true}
+            <TextInputCustom
+              optional={true}
+              isDarkMode={isDarkMode}
+              placeholder="Enter Location"
+              label="Location"
+              value={experience.location}
+              onChangeText={text =>
+                setStateData(prev => {
+                  const updatedExperience = [...prev.Experience];
+                  updatedExperience[expIndex].location = text;
+                  return {...prev, Experience: updatedExperience};
+                })
+              }
+            />
+            <View style={styles.row}>
+              <CustomDropdown
                 isDarkMode={isDarkMode}
-                placeholder="Enter Location"
-                label="Location"
-                value={experience.location}
-                onChangeText={text =>
-                  setStateData(prev => {
-                    const updatedExperience = [...prev.Experience];
-                    updatedExperience[expIndex].location = text;
-                    return {...prev, Experience: updatedExperience};
-                  })
+                type={false}
+                value={experience.startDate}
+                label="Start Date"
+                maximumDate={new Date()}
+                selectedValue={value =>
+                  handleFieldChange(
+                    expIndex,
+                    'startDate',
+                    moment(value).format(dateFormet),
+                  )
                 }
+                mainContainerStyle={styles.dropdownStyle}
               />
-              <View style={styles.row}>
+              {!experience.currently_working && (
                 <CustomDropdown
                   isDarkMode={isDarkMode}
                   type={false}
-                  value={experience.startDate}
-                  label="Start Date"
-                  maximumDate={new Date()}
+                  value={experience.endDate}
+                  label="End Date"
+                  // minimumDate={new Date()}
                   selectedValue={value =>
                     handleFieldChange(
                       expIndex,
-                      'startDate',
+                      'endDate',
                       moment(value).format(dateFormet),
                     )
                   }
                   mainContainerStyle={styles.dropdownStyle}
                 />
-                {!experience.currently_working && (
-                  <CustomDropdown
-                    isDarkMode={isDarkMode}
-                    type={false}
-                    value={experience.endDate}
-                    label="End Date"
-                    minimumDate={new Date()}
-                    selectedValue={value =>
-                      handleFieldChange(
-                        expIndex,
-                        'endDate',
-                        moment(value).format(dateFormet),
-                      )
-                    }
-                    mainContainerStyle={styles.dropdownStyle}
-                  />
-                )}
-              </View>
-              {!experience.endDate && (
-                <View style={styles.checkboxContainer}>
-                  <AppCheckBox
-                    isDarkMode={isDarkMode}
-                    isChecked={experience.currently_working}
-                    onPress={() =>
-                      handleFieldChange(
-                        expIndex,
-                        'currently_working',
-                        !experience.currently_working,
-                      )
-                    }
-                    CheckBoxTextStyle={styles.checkBoxText}
-                    {...termProps}
-                    text="I am currently working in this role"
-                  />
-                </View>
               )}
             </View>
-          ) : (
-            <ButtonView
-              onPress={() => {
-                let index = expIndex;
-                if (statedata.selectedExpId == expIndex) {
-                  setStateData(prev => ({
-                    ...prev,
-                    selectedExpId: null,
-                  }));
-                } else {
-                  setStateData(prev => ({
-                    ...prev,
-                    selectedExpId: index,
-                  }));
-                }
-              }}>
-              <View style={styles.experienceButton}>
-                <ScaleText
+            {!experience.endDate && (
+              <View style={styles.checkboxContainer}>
+                <AppCheckBox
                   isDarkMode={isDarkMode}
-                  fontSize={ms(15)}
-                  text={`Experience No ${expIndex + 1}`}
-                />
-                <VectorIcon
-                  color={isDarkMode ? Colors.Whiite_B8 : Colors.Black_55}
-                  type="FontAwesome"
-                  name="chevron-down"
-                  size={ms(14)}
+                  isChecked={experience.currently_working}
+                  onPress={() =>
+                    handleFieldChange(
+                      expIndex,
+                      'currently_working',
+                      !experience.currently_working,
+                    )
+                  }
+                  CheckBoxTextStyle={styles.checkBoxText}
+                  {...termProps}
+                  text="I am currently working in this role"
                 />
               </View>
-            </ButtonView>
-          )}
+            )}
+          </View>
         </View>
       );
     };
 
     const handleAddExperience = index => {
-      if (index > 0) return;
-      const selectedArray = statedata.Experience[index];
+      const selectedArray =
+        statedata.Experience[index] ?? statedata.Experience[0];
       const invalidField = Object.values(selectedArray)?.filter(
         val => typeof val === 'string' && !val.trim(),
       );
@@ -774,156 +930,9 @@ const AuthProfile = ({navigation}) => {
     const renderEducationSection = (education, eduIndex) => {
       const isSelected = statedata.selectedEudId === eduIndex;
       return (
-        <View key={eduIndex}>
-          {isSelected ? (
-            <View key={eduIndex} style={styles.educationSection}>
-              <ButtonView
-                onPress={() => {
-                  let index = eduIndex;
-                  if (statedata.selectedEudId == eduIndex) {
-                    setStateData(prev => ({
-                      ...prev,
-                      selectedEudId: null,
-                    }));
-                  } else {
-                    setStateData(prev => ({
-                      ...prev,
-                      selectedEudId: index,
-                    }));
-                  }
-                }}>
-                <View style={styles.experienceButton}>
-                  <ScaleText
-                    isDarkMode={isDarkMode}
-                    fontSize={ms(15)}
-                    text={`Education No ${eduIndex + 1}`}
-                  />
-                  <VectorIcon
-                    type="FontAwesome"
-                    name="chevron-up"
-                    size={ms(14)}
-                    color={isDarkMode ? Colors.Whiite_B8 : Colors.Black_55}
-                  />
-                </View>
-              </ButtonView>
-              {statedata.Education.length > 1 && (
-                <ButtonView onPress={() => handleRemoveEducation(eduIndex)}>
-                  <ScaleText
-                    TextStyle={{marginRight: ms(10)}}
-                    textAlign={'right'}
-                    fontSize={ms(12)}
-                    color={Colors.Red}
-                    text={'Delete'}
-                  />
-                </ButtonView>
-              )}
-              <TextInputCustom
-                optional={true}
-                isDarkMode={isDarkMode}
-                placeholder="Enter school name"
-                label="School"
-                value={education.school}
-                onChangeText={text =>
-                  setStateData(prev => {
-                    const updatedEducation = [...prev.Education];
-                    updatedEducation[eduIndex].school = text;
-                    return {...prev, Education: updatedEducation};
-                  })
-                }
-              />
-              <CustomDropdown
-                isDarkMode={isDarkMode}
-                value={education.degree.name}
-                label="Higher Education Degree"
-                selectedValue={
-                  value =>
-                    setStateData(prev => {
-                      const updatedEducation = [...prev.Education];
-                      updatedEducation[eduIndex].degree = value;
-                      return {...prev, Education: updatedEducation};
-                    })
-                  // handlePassportFieldChange(passIndex, 'passport', value)
-                }
-                // mainContainerStyle={styles.dropdownViewStyle}
-                data={statedata.getDegree}
-                // data={statedata.getSkills}
-              />
-              {/* <TextInputCustom
-                optional={true}
-                isDarkMode={isDarkMode}
-                placeholder="Enter higher education degree"
-                label="Higher Education Degree"
-                value={education.degree}
-                onChangeText={text =>
-                  setStateData(prev => {
-                    const updatedEducation = [...prev.Education];
-                    updatedEducation[eduIndex].degree = text;
-                    return { ...prev, Education: updatedEducation };
-                  })
-                }
-              /> */}
-              <TextInputCustom
-                optional={true}
-                isDarkMode={isDarkMode}
-                placeholder="Field of study"
-                label="Subject field"
-                value={education.field}
-                onChangeText={text =>
-                  setStateData(prev => {
-                    const updatedEducation = [...prev.Education];
-                    updatedEducation[eduIndex].field = text;
-                    return {...prev, Education: updatedEducation};
-                  })
-                }
-              />
-              <View style={styles.row}>
-                <CustomDropdown
-                  type={false}
-                  isDarkMode={isDarkMode}
-                  value={education.startDate}
-                  label="Start Date"
-                  maximumDate={new Date()}
-                  selectedValue={value => {
-                    setStateData(prev => {
-                      const updatedEducation = [...prev.Education];
-                      updatedEducation[eduIndex].startDate =
-                        moment(value).format(dateFormet);
-                      return {...prev, Education: updatedEducation};
-                    });
-                  }}
-                  mainContainerStyle={styles.dropdownStyle}
-                />
-                <CustomDropdown
-                  type={false}
-                  minimumDate={new Date()}
-                  isDarkMode={isDarkMode}
-                  value={education.endDate}
-                  label="End Date"
-                  selectedValue={value => {
-                    setStateData(prev => {
-                      const updatedEducation = [...prev.Education];
-                      updatedEducation[eduIndex].endDate =
-                        moment(value).format(dateFormet);
-                      return {...prev, Education: updatedEducation};
-                    });
-                  }}
-                  mainContainerStyle={styles.dropdownStyle}
-                />
-              </View>
-              {/* {statedata.Education.length > 1 && (
-                <ButtonView onPress={() => handleRemoveEducation(eduIndex)}>
-                  <ScaleText
-                    TextStyle={{marginRight: ms(10)}}
-                    textAlign={'right'}
-                    fontSize={ms(12)}
-                    color={Colors.Red}
-                    text={'Delete'}
-                  />
-                </ButtonView>
-              )} */}
-            </View>
-          ) : (
-            <ButtonView
+        <View style={{width: ms(275)}} key={eduIndex}>
+          <View key={eduIndex} style={styles.educationSection}>
+            {/* <ButtonView
               onPress={() => {
                 let index = eduIndex;
                 if (statedata.selectedEudId == eduIndex) {
@@ -942,27 +951,139 @@ const AuthProfile = ({navigation}) => {
                 <ScaleText
                   isDarkMode={isDarkMode}
                   fontSize={ms(15)}
-                  text={`Eduction No ${eduIndex + 1}`}
+                  text={`Education No ${eduIndex + 1}`}
                 />
                 <VectorIcon
                   type="FontAwesome"
-                  name="chevron-down"
+                  name="chevron-up"
                   size={ms(14)}
-                  color={isDarkMode ? Colors.Whiite_B1 : Colors.Black_55}
+                  color={isDarkMode ? Colors.Whiite_B8 : Colors.Black_55}
                 />
               </View>
-            </ButtonView>
-          )}
+            </ButtonView> */}
+            {statedata.Education.length > 1 && (
+              <ButtonView onPress={() => handleRemoveEducation(eduIndex)}>
+                <ScaleText
+                  TextStyle={{marginRight: ms(10)}}
+                  textAlign={'right'}
+                  fontSize={ms(12)}
+                  color={Colors.Red}
+                  text={'Delete'}
+                />
+              </ButtonView>
+            )}
+            <TextInputCustom
+              optional={true}
+              isDarkMode={isDarkMode}
+              placeholder="Enter school name"
+              label="School"
+              value={education.school}
+              onChangeText={text =>
+                setStateData(prev => {
+                  const updatedEducation = [...prev.Education];
+                  updatedEducation[eduIndex].school = text;
+                  return {...prev, Education: updatedEducation};
+                })
+              }
+            />
+            <CustomDropdown
+              isDarkMode={isDarkMode}
+              value={education.degree.name}
+              label="Higher Education Degree"
+              selectedValue={
+                value =>
+                  setStateData(prev => {
+                    const updatedEducation = [...prev.Education];
+                    updatedEducation[eduIndex].degree = value;
+                    return {...prev, Education: updatedEducation};
+                  })
+                // handlePassportFieldChange(passIndex, 'passport', value)
+              }
+              // mainContainerStyle={styles.dropdownViewStyle}
+              data={statedata.getDegree}
+              // data={statedata.getSkills}
+            />
+            {/* <TextInputCustom
+                optional={true}
+                isDarkMode={isDarkMode}
+                placeholder="Enter higher education degree"
+                label="Higher Education Degree"
+                value={education.degree}
+                onChangeText={text =>
+                  setStateData(prev => {
+                    const updatedEducation = [...prev.Education];
+                    updatedEducation[eduIndex].degree = text;
+                    return { ...prev, Education: updatedEducation };
+                  })
+                }
+              /> */}
+            <TextInputCustom
+              optional={true}
+              isDarkMode={isDarkMode}
+              placeholder="Field of study"
+              label="Subject field"
+              value={education.field}
+              onChangeText={text =>
+                setStateData(prev => {
+                  const updatedEducation = [...prev.Education];
+                  updatedEducation[eduIndex].field = text;
+                  return {...prev, Education: updatedEducation};
+                })
+              }
+            />
+            <View style={styles.row}>
+              <CustomDropdown
+                type={false}
+                isDarkMode={isDarkMode}
+                value={education.startDate}
+                label="Start Date"
+                maximumDate={new Date()}
+                selectedValue={value => {
+                  setStateData(prev => {
+                    const updatedEducation = [...prev.Education];
+                    updatedEducation[eduIndex].startDate =
+                      moment(value).format(dateFormet);
+                    return {...prev, Education: updatedEducation};
+                  });
+                }}
+                mainContainerStyle={styles.dropdownStyle}
+              />
+              <CustomDropdown
+                type={false}
+                // minimumDate={new Date()}
+                isDarkMode={isDarkMode}
+                value={education.endDate}
+                label="End Date"
+                selectedValue={value => {
+                  setStateData(prev => {
+                    const updatedEducation = [...prev.Education];
+                    updatedEducation[eduIndex].endDate =
+                      moment(value).format(dateFormet);
+                    return {...prev, Education: updatedEducation};
+                  });
+                }}
+                mainContainerStyle={styles.dropdownStyle}
+              />
+            </View>
+            {/* {statedata.Education.length > 1 && (
+                <ButtonView onPress={() => handleRemoveEducation(eduIndex)}>
+                  <ScaleText
+                    TextStyle={{marginRight: ms(10)}}
+                    textAlign={'right'}
+                    fontSize={ms(12)}
+                    color={Colors.Red}
+                    text={'Delete'}
+                  />
+                </ButtonView>
+              )} */}
+          </View>
         </View>
       );
     };
 
     const handleAddEducation = index => {
-      console.log('====================================');
-      console.log(index, 'indexindexindexindexindex');
-      console.log('====================================');
-      if (index > 0) return;
-      const selectedArray = statedata.Education[index];
+      const selectedArray =
+        statedata.Education[index] ?? statedata.Education[0];
       const invalidField = Object.values(selectedArray)?.filter(
         val => typeof val === 'string' && !val.trim(),
       );
@@ -1026,77 +1147,8 @@ const AuthProfile = ({navigation}) => {
       const isSelected = statedata.selectedpasId === passIndex;
       return (
         <View key={passIndex}>
-          {isSelected ? (
-            <View>
-              <ButtonView
-                onPress={() => {
-                  let index = passIndex;
-                  if (statedata.selectedpasId == passIndex) {
-                    setStateData(prev => ({
-                      ...prev,
-                      selectedpasId: null,
-                    }));
-                  } else {
-                    setStateData(prev => ({
-                      ...prev,
-                      selectedpasId: index,
-                    }));
-                  }
-                }}>
-                <View style={styles.experienceButton}>
-                  <ScaleText
-                    isDarkMode={isDarkMode}
-                    fontSize={ms(15)}
-                    text={`Passport No ${passIndex + 1}`}
-                  />
-                  <VectorIcon
-                    type="FontAwesome"
-                    name="chevron-up"
-                    size={ms(14)}
-                    color={isDarkMode ? Colors.Whiite_B1 : Colors.Black_55}
-                  />
-                </View>
-              </ButtonView>
-              {statedata.Passport.length > 1 && (
-                <ButtonView onPress={() => handleRemovePassport(passIndex)}>
-                  <ScaleText
-                    TextStyle={{marginRight: ms(10)}}
-                    textAlign={'right'}
-                    fontSize={ms(12)}
-                    color={Colors.Red}
-                    text={'Delete'}
-                  />
-                </ButtonView>
-              )}
-              <View style={styles.flexViewStyle}>
-                <CustomDropdown
-                  isDarkMode={isDarkMode}
-                  value={passport.passport.name}
-                  label="Passport Nationality"
-                  selectedValue={value =>
-                    handlePassportFieldChange(passIndex, 'passport', value)
-                  }
-                  mainContainerStyle={styles.dropdownViewStyle}
-                  data={statedata.getCountry}
-                />
-                <CustomDropdown
-                  type={false}
-                  isDarkMode={isDarkMode}
-                  value={passport.dateofexp}
-                  label="Date of Expiration"
-                  selectedValue={value =>
-                    handlePassportFieldChange(
-                      passIndex,
-                      'dateofexp',
-                      moment(value).format(dateFormet),
-                    )
-                  }
-                  mainContainerStyle={styles.dropdownStyle}
-                />
-              </View>
-            </View>
-          ) : (
-            <ButtonView
+          <View>
+            {/* <ButtonView
               onPress={() => {
                 let index = passIndex;
                 if (statedata.selectedpasId == passIndex) {
@@ -1119,13 +1171,50 @@ const AuthProfile = ({navigation}) => {
                 />
                 <VectorIcon
                   type="FontAwesome"
-                  name="chevron-down"
+                  name="chevron-up"
                   size={ms(14)}
                   color={isDarkMode ? Colors.Whiite_B1 : Colors.Black_55}
                 />
               </View>
-            </ButtonView>
-          )}
+            </ButtonView> */}
+            {statedata.Passport.length > 1 && (
+              <ButtonView onPress={() => handleRemovePassport(passIndex)}>
+                <ScaleText
+                  TextStyle={{marginRight: ms(10)}}
+                  textAlign={'right'}
+                  fontSize={ms(12)}
+                  color={Colors.Red}
+                  text={'Delete'}
+                />
+              </ButtonView>
+            )}
+            <View style={styles.flexViewStyle}>
+              <CustomDropdown
+                isDarkMode={isDarkMode}
+                value={passport.passport.name}
+                label="Passport Nationality"
+                selectedValue={value =>
+                  handlePassportFieldChange(passIndex, 'passport', value)
+                }
+                mainContainerStyle={styles.dropdownViewStyle}
+                data={statedata.getCountry}
+              />
+              <CustomDropdown
+                type={false}
+                isDarkMode={isDarkMode}
+                value={passport.dateofexp}
+                label="Date of Expiration"
+                selectedValue={value =>
+                  handlePassportFieldChange(
+                    passIndex,
+                    'dateofexp',
+                    moment(value).format(dateFormet),
+                  )
+                }
+                mainContainerStyle={styles.dropdownStyle}
+              />
+            </View>
+          </View>
         </View>
       );
     };
@@ -1134,113 +1223,51 @@ const AuthProfile = ({navigation}) => {
       const isSelected = statedata.selectedVisaId === visaIndex;
       return (
         <View key={visaIndex}>
-          {isSelected ? (
-            <View>
-              <ButtonView
-                onPress={() => {
-                  let index = visaIndex;
-                  if (statedata.selectedVisaId == visaIndex) {
-                    setStateData(prev => ({
-                      ...prev,
-                      selectedVisaId: null,
-                    }));
-                  } else {
-                    setStateData(prev => ({
-                      ...prev,
-                      selectedVisaId: index,
-                    }));
-                  }
-                }}>
-                <View style={styles.experienceButton}>
-                  <ScaleText
-                    isDarkMode={isDarkMode}
-                    fontSize={ms(15)}
-                    text={`Visa No ${visaIndex + 1}`}
-                  />
-                  <VectorIcon
-                    type="FontAwesome"
-                    name="chevron-up"
-                    size={ms(14)}
-                    color={isDarkMode ? Colors.Whiite_B1 : Colors.Black_55}
-                  />
-                </View>
-              </ButtonView>
-              {statedata.Visa.length > 1 && (
-                <ButtonView onPress={() => handleRemoveVisa(visaIndex)}>
-                  <ScaleText
-                    TextStyle={{marginRight: ms(10)}}
-                    textAlign={'right'}
-                    fontSize={ms(12)}
-                    color={Colors.Red}
-                    text={'Delete'}
-                  />
-                </ButtonView>
-              )}
-              <View style={styles.flexViewStyle}>
-                <CustomDropdown
-                  isDarkMode={isDarkMode}
-                  value={visaVal.visa.name}
-                  label="Visa (Optional)"
-                  selectedValue={value =>
-                    handleVisaFieldChange(visaIndex, 'visa', value)
-                  }
-                  mainContainerStyle={styles.dropdownViewStyle}
-                  data={statedata.getCountry}
-                />
-                <CustomDropdown
-                  type={false}
-                  isDarkMode={isDarkMode}
-                  value={visaVal.dateofexp}
-                  label="Date of Expiration"
-                  selectedValue={value =>
-                    handleVisaFieldChange(
-                      visaIndex,
-                      'dateofexp',
-                      moment(value).format(dateFormet),
-                    )
-                  }
-                  mainContainerStyle={styles.dropdownStyle}
-                />
-              </View>
-            </View>
-          ) : (
-            <ButtonView
-              onPress={() => {
-                let index = visaIndex;
-                if (statedata.selectedVisaId == visaIndex) {
-                  setStateData(prev => ({
-                    ...prev,
-                    selectedVisaId: null,
-                  }));
-                } else {
-                  setStateData(prev => ({
-                    ...prev,
-                    selectedVisaId: index,
-                  }));
-                }
-              }}>
-              <View style={styles.experienceButton}>
+          <View style={{width: ms(270)}}>
+            {statedata.Visa.length > 1 && (
+              <ButtonView onPress={() => handleRemoveVisa(visaIndex)}>
                 <ScaleText
-                  isDarkMode={isDarkMode}
-                  fontSize={ms(15)}
-                  text={`Visa No ${visaIndex + 1}`}
+                  TextStyle={{marginRight: ms(10)}}
+                  textAlign={'right'}
+                  fontSize={ms(12)}
+                  color={Colors.Red}
+                  text={'Delete'}
                 />
-                <VectorIcon
-                  type="FontAwesome"
-                  name="chevron-down"
-                  size={ms(14)}
-                  color={isDarkMode ? Colors.Whiite_B1 : Colors.Black_55}
-                />
-              </View>
-            </ButtonView>
-          )}
+              </ButtonView>
+            )}
+            <View style={styles.flexViewStyle}>
+              <CustomDropdown
+                isDarkMode={isDarkMode}
+                value={visaVal.visa.name}
+                label="Visa (Optional)"
+                selectedValue={value =>
+                  handleVisaFieldChange(visaIndex, 'visa', value)
+                }
+                mainContainerStyle={styles.dropdownViewStyle}
+                data={statedata.getCountry}
+              />
+              <CustomDropdown
+                type={false}
+                isDarkMode={isDarkMode}
+                value={visaVal.dateofexp}
+                label="Date of Expiration"
+                selectedValue={value =>
+                  handleVisaFieldChange(
+                    visaIndex,
+                    'dateofexp',
+                    moment(value).format(dateFormet),
+                  )
+                }
+                mainContainerStyle={styles.dropdownStyle}
+              />
+            </View>
+          </View>
         </View>
       );
     };
 
     const handleAddPassport = index => {
-      if (index > 0) return;
-      const selectedArray = statedata.Passport[index];
+      const selectedArray = statedata.Passport[index] ?? statedata.Passport[0];
       const invalidField = Object.values(selectedArray)?.filter(
         val => typeof val === 'string' && !val.trim(),
       );
@@ -1264,8 +1291,7 @@ const AuthProfile = ({navigation}) => {
       }
     };
     const handleAddVisa = index => {
-      if (index > 0) return;
-      const selectedArray = statedata.Visa[index];
+      const selectedArray = statedata.Visa[index] ?? statedata.Visa[0];
       const invalidField = Object.values(selectedArray)?.filter(
         val => typeof val === 'string' && !val.trim(),
       );
@@ -1316,8 +1342,7 @@ const AuthProfile = ({navigation}) => {
       const invalidVisaVisaField = Object.values(selectedArray)?.filter(
         val => typeof val === 'string' && !val.trim(),
       );
-      const isButtonDisabled =
-        invalidPassportField.length > 0 || invalidVisaVisaField.length > 0;
+      const isButtonDisabled = invalidPassportField.length > 0;
 
       return (
         <View style={styles.formContainer}>
@@ -1353,101 +1378,40 @@ const AuthProfile = ({navigation}) => {
       const isSelected = statedata.selectedlangId === langIndex;
       return (
         <View key={langIndex}>
-          {isSelected ? (
-            <View>
-              <ButtonView
-                onPress={() => {
-                  let index = langIndex;
-                  if (statedata.selectedlangId == langIndex) {
-                    setStateData(prev => ({
-                      ...prev,
-                      selectedlangId: null,
-                    }));
-                  } else {
-                    setStateData(prev => ({
-                      ...prev,
-                      selectedlangId: index,
-                    }));
-                  }
-                }}>
-                <View style={styles.experienceButton}>
-                  <ScaleText
-                    isDarkMode={isDarkMode}
-                    fontSize={ms(15)}
-                    text={`Language No ${langIndex + 1}`}
-                  />
-                  <VectorIcon
-                    type="FontAwesome"
-                    name="chevron-up"
-                    size={ms(14)}
-                    color={isDarkMode ? Colors.Whiite_B1 : Colors.Black_55}
-                  />
-                </View>
-              </ButtonView>
-              {statedata.language.length > 1 && (
-                <ButtonView onPress={() => handleRemovelanguage(langIndex)}>
-                  <ScaleText
-                    TextStyle={{marginRight: ms(10)}}
-                    textAlign={'right'}
-                    fontSize={ms(12)}
-                    color={Colors.Red}
-                    text={'Delete'}
-                  />
-                </ButtonView>
-              )}
-              <View
-                style={{
-                  paddingHorizontal: ms(5),
-                }}>
-                <CustomDropdown
-                  isDarkMode={isDarkMode}
-                  value={language.language.name}
-                  label="Select Language"
-                  selectedValue={value =>
-                    handleLanguageFieldChange(langIndex, 'language', value)
-                  }
-                  data={statedata.getLanguages.data}
-                />
-              </View>
-            </View>
-          ) : (
-            <ButtonView
-              onPress={() => {
-                let index = langIndex;
-                if (statedata.selectedlangId == langIndex) {
-                  setStateData(prev => ({
-                    ...prev,
-                    selectedlangId: null,
-                  }));
-                } else {
-                  setStateData(prev => ({
-                    ...prev,
-                    selectedlangId: index,
-                  }));
-                }
-              }}>
-              <View style={styles.experienceButton}>
+          <View>
+            {statedata.language.length > 1 && (
+              <ButtonView onPress={() => handleRemovelanguage(langIndex)}>
                 <ScaleText
-                  isDarkMode={isDarkMode}
-                  fontSize={ms(15)}
-                  text={`Language No ${langIndex + 1}`}
+                  TextStyle={{marginRight: ms(10)}}
+                  textAlign={'right'}
+                  fontSize={ms(12)}
+                  color={Colors.Red}
+                  text={'Delete'}
                 />
-                <VectorIcon
-                  type="FontAwesome"
-                  name="chevron-down"
-                  size={ms(14)}
-                  color={isDarkMode ? Colors.Whiite_B1 : Colors.Black_55}
-                />
-              </View>
-            </ButtonView>
-          )}
+              </ButtonView>
+            )}
+            <View
+              style={{
+                width: ms(275),
+                paddingHorizontal: ms(5),
+              }}>
+              <CustomDropdown
+                isDarkMode={isDarkMode}
+                value={language.language.name}
+                label="Select Language"
+                selectedValue={value =>
+                  handleLanguageFieldChange(langIndex, 'language', value)
+                }
+                data={statedata.getLanguages.data}
+              />
+            </View>
+          </View>
         </View>
       );
     };
 
     const handleAddlanguage = index => {
-      if (index > 0) return;
-      const selectedArray = statedata.language[index];
+      const selectedArray = statedata.language[index] ?? statedata.language[0];
       const invalidField = Object.values(selectedArray)?.filter(
         val => typeof val === 'string' && !val.trim(),
       );
@@ -1507,105 +1471,42 @@ const AuthProfile = ({navigation}) => {
 
   const skillsetup = index => {
     const rendeSkillSetup = (skillsVal, skillIndex) => {
-      console.log('🚀 ~ rendeSkillSetup ~ skillsVal:', skillsVal);
       const isSelected = statedata.selectedSkillId === skillIndex;
       return (
         <View key={skillIndex}>
-          {isSelected ? (
-            <View>
-              <ButtonView
-                onPress={() => {
-                  let index = skillIndex;
-                  if (statedata.selectedSkillId == skillIndex) {
-                    setStateData(prev => ({
-                      ...prev,
-                      selectedSkillId: null,
-                    }));
-                  } else {
-                    setStateData(prev => ({
-                      ...prev,
-                      selectedSkillId: index,
-                    }));
-                  }
-                }}>
-                <View style={styles.experienceButton}>
-                  <ScaleText
-                    isDarkMode={isDarkMode}
-                    fontSize={ms(15)}
-                    text={`Skills No ${skillIndex + 1}`}
-                  />
-                  <VectorIcon
-                    type="FontAwesome"
-                    name="chevron-up"
-                    size={ms(14)}
-                    color={isDarkMode ? Colors.Whiite_B1 : Colors.Black_55}
-                  />
-                </View>
-              </ButtonView>
-              {statedata.Skills.length > 1 && (
-                <ButtonView onPress={() => handleDeleteSkill(skillIndex)}>
-                  <ScaleText
-                    TextStyle={{marginRight: ms(10)}}
-                    textAlign={'right'}
-                    fontSize={ms(12)}
-                    color={Colors.Red}
-                    text={'Delete'}
-                  />
-                </ButtonView>
-              )}
-              <View
-                style={{
-                  paddingHorizontal: ms(5),
-                }}>
-                <CustomDropdown
-                  isDarkMode={isDarkMode}
-                  value={skillsVal.skill.name}
-                  label="Select Skills"
-                  selectedValue={value =>
-                    handleSkillsFieldChange(skillIndex, 'skill', value)
-                  }
-                  data={statedata.getSkills}
-                />
-              </View>
-            </View>
-          ) : (
-            <ButtonView
-              onPress={() => {
-                let index = skillIndex;
-                if (statedata.selectedSkillId == skillIndex) {
-                  setStateData(prev => ({
-                    ...prev,
-                    selectedSkillId: null,
-                  }));
-                } else {
-                  setStateData(prev => ({
-                    ...prev,
-                    selectedSkillId: index,
-                  }));
-                }
-              }}>
-              <View style={styles.experienceButton}>
+          <View style={{width: ms(275)}}>
+            {statedata.Skills.length > 1 && (
+              <ButtonView onPress={() => handleDeleteSkill(skillIndex)}>
                 <ScaleText
-                  isDarkMode={isDarkMode}
-                  fontSize={ms(15)}
-                  text={`Language No ${skillIndex + 1}`}
+                  TextStyle={{marginRight: ms(10)}}
+                  textAlign={'right'}
+                  fontSize={ms(12)}
+                  color={Colors.Red}
+                  text={'Delete'}
                 />
-                <VectorIcon
-                  type="FontAwesome"
-                  name="chevron-down"
-                  size={ms(14)}
-                  color={isDarkMode ? Colors.Whiite_B1 : Colors.Black_55}
-                />
-              </View>
-            </ButtonView>
-          )}
+              </ButtonView>
+            )}
+            <View
+              style={{
+                paddingHorizontal: ms(5),
+              }}>
+              <CustomDropdown
+                isDarkMode={isDarkMode}
+                value={skillsVal.skill.name}
+                label="Select Skills"
+                selectedValue={value =>
+                  handleSkillsFieldChange(skillIndex, 'skill', value)
+                }
+                data={statedata.getSkills}
+              />
+            </View>
+          </View>
         </View>
       );
     };
 
     const handleAddSkills = index => {
-      if (index > 0) return;
-      const selectedArray = statedata.Skills[index];
+      const selectedArray = statedata.Skills[index] ?? statedata.Skills[0];
       const invalidField = Object.values(selectedArray)?.filter(
         val => typeof val === 'string' && !val.trim(),
       );
@@ -1666,113 +1567,52 @@ const AuthProfile = ({navigation}) => {
     const rendeLicenseSetup = (licenseVal, licenseIndex) => {
       const isSelected = statedata.selectedLicenseId === licenseIndex;
       return (
-        <View key={licenseIndex}>
-          {isSelected ? (
-            <View>
-              <ButtonView
-                onPress={() => {
-                  let index = licenseIndex;
-                  if (statedata.selectedLicenseId == licenseIndex) {
-                    setStateData(prev => ({
-                      ...prev,
-                      selectedLicenseId: null,
-                    }));
-                  } else {
-                    setStateData(prev => ({
-                      ...prev,
-                      selectedLicenseId: index,
-                    }));
-                  }
-                }}>
-                <View style={styles.experienceButton}>
-                  <ScaleText
-                    isDarkMode={isDarkMode}
-                    fontSize={ms(15)}
-                    text={`License No ${licenseIndex + 1}`}
-                  />
-                  <VectorIcon
-                    type="FontAwesome"
-                    name="chevron-up"
-                    size={ms(14)}
-                    color={isDarkMode ? Colors.Whiite_B1 : Colors.Black_55}
-                  />
-                </View>
+        <View style={{width: ms(275)}} key={licenseIndex}>
+          <View>
+            {statedata.License.length > 1 && (
+              <ButtonView onPress={() => handleDeleteLicense(licenseIndex)}>
+                <ScaleText
+                  TextStyle={{marginRight: ms(10)}}
+                  textAlign={'right'}
+                  fontSize={ms(12)}
+                  color={Colors.Red}
+                  text={'Delete'}
+                />
               </ButtonView>
-              {statedata.License.length > 1 && (
-                <ButtonView onPress={() => handleDeleteLicense(licenseIndex)}>
-                  <ScaleText
-                    TextStyle={{marginRight: ms(10)}}
-                    textAlign={'right'}
-                    fontSize={ms(12)}
-                    color={Colors.Red}
-                    text={'Delete'}
-                  />
-                </ButtonView>
-              )}
-              <View
-                style={{
-                  paddingHorizontal: ms(5),
-                }}>
-                <View style={styles.flexViewStyle}>
-                  <CustomDropdown
-                    isDarkMode={isDarkMode}
-                    mainContainerStyle={styles.dropdownViewStyle}
-                    label="License"
-                    value={licenseVal.license.name}
-                    selectedValue={value =>
-                      handleLicenseFieldChange(licenseIndex, 'license', value)
-                    }
-                    data={statedata.getLicance}
-                    // data={statedata.getSkills}
-                  />
-                  <CustomDropdown
-                    isDarkMode={isDarkMode}
-                    mainContainerStyle={styles.dropdownViewStyle}
-                    label="Issuing Country"
-                    value={licenseVal.issue_country.name}
-                    selectedValue={value =>
-                      handleLicenseFieldChange(
-                        licenseIndex,
-                        'issue_country',
-                        value,
-                      )
-                    }
-                    data={statedata.getCountry}
-                  />
-                </View>
+            )}
+            <View
+              style={{
+                paddingHorizontal: ms(5),
+              }}>
+              <View style={styles.flexViewStyle}>
+                <CustomDropdown
+                  isDarkMode={isDarkMode}
+                  mainContainerStyle={styles.dropdownViewStyle}
+                  label="License"
+                  value={licenseVal.license.name}
+                  selectedValue={value =>
+                    handleLicenseFieldChange(licenseIndex, 'license', value)
+                  }
+                  data={statedata.getLicance}
+                  // data={statedata.getSkills}
+                />
+                <CustomDropdown
+                  isDarkMode={isDarkMode}
+                  mainContainerStyle={styles.dropdownViewStyle}
+                  label="Issuing Country"
+                  value={licenseVal.issue_country.name}
+                  selectedValue={value =>
+                    handleLicenseFieldChange(
+                      licenseIndex,
+                      'issue_country',
+                      value,
+                    )
+                  }
+                  data={statedata.getCountry}
+                />
               </View>
             </View>
-          ) : (
-            <ButtonView
-              onPress={() => {
-                let index = licenseIndex;
-                if (statedata.selectedLicenseId == licenseIndex) {
-                  setStateData(prev => ({
-                    ...prev,
-                    selectedLicenseId: null,
-                  }));
-                } else {
-                  setStateData(prev => ({
-                    ...prev,
-                    selectedLicenseId: index,
-                  }));
-                }
-              }}>
-              <View style={styles.experienceButton}>
-                <ScaleText
-                  isDarkMode={isDarkMode}
-                  fontSize={ms(15)}
-                  text={`License No ${licenseIndex + 1}`}
-                />
-                <VectorIcon
-                  type="FontAwesome"
-                  name="chevron-down"
-                  size={ms(14)}
-                  color={isDarkMode ? Colors.Whiite_B1 : Colors.Black_55}
-                />
-              </View>
-            </ButtonView>
-          )}
+          </View>
         </View>
       );
     };
@@ -1780,124 +1620,62 @@ const AuthProfile = ({navigation}) => {
       const isSelected = statedata.selectedCertificateId === certificateIndex;
       return (
         <View key={certificateIndex}>
-          {isSelected ? (
-            <View>
+          <View>
+            {statedata.Certificate.length > 1 && (
               <ButtonView
-                onPress={() => {
-                  let index = certificateIndex;
-                  if (statedata.selectedCertificateId == certificateIndex) {
-                    setStateData(prev => ({
-                      ...prev,
-                      selectedCertificateId: null,
-                    }));
-                  } else {
-                    setStateData(prev => ({
-                      ...prev,
-                      selectedCertificateId: index,
-                    }));
-                  }
-                }}>
-                <View style={styles.experienceButton}>
-                  <ScaleText
-                    isDarkMode={isDarkMode}
-                    fontSize={ms(15)}
-                    text={`Certificate No ${certificateIndex + 1}`}
-                  />
-                  <VectorIcon
-                    type="FontAwesome"
-                    name="chevron-up"
-                    size={ms(14)}
-                    color={isDarkMode ? Colors.Whiite_B1 : Colors.Black_55}
-                  />
-                </View>
+                onPress={() => handleDeleteCertificate(certificateIndex)}>
+                <ScaleText
+                  TextStyle={{marginRight: ms(10)}}
+                  textAlign={'right'}
+                  fontSize={ms(12)}
+                  color={Colors.Red}
+                  text={'Delete'}
+                />
               </ButtonView>
-              {statedata.Certificate.length > 1 && (
-                <ButtonView
-                  onPress={() => handleDeleteCertificate(certificateIndex)}>
-                  <ScaleText
-                    TextStyle={{marginRight: ms(10)}}
-                    textAlign={'right'}
-                    fontSize={ms(12)}
-                    color={Colors.Red}
-                    text={'Delete'}
-                  />
-                </ButtonView>
-              )}
-              <View
-                style={{
-                  paddingHorizontal: ms(5),
-                }}>
-                <View style={styles.flexViewStyle}>
-                  <CustomDropdown
-                    isDarkMode={isDarkMode}
-                    mainContainerStyle={styles.dropdownViewStyle}
-                    label="Certification"
-                    value={certificateVal.certificate.name}
-                    selectedValue={value =>
-                      handleCertificatesFieldChange(
-                        certificateIndex,
-                        'certificate',
-                        value,
-                      )
-                    }
-                    data={statedata.getCertificate}
-                    // data={statedata.getSkills}
-                  />
-                  <CustomDropdown
-                    isDarkMode={isDarkMode}
-                    mainContainerStyle={styles.dropdownViewStyle}
-                    label="Issuing Country"
-                    value={certificateVal.issue_country.name}
-                    selectedValue={value =>
-                      handleCertificatesFieldChange(
-                        certificateIndex,
-                        'issue_country',
-                        value,
-                      )
-                    }
-                    data={statedata.getCountry}
-                  />
-                </View>
+            )}
+            <View
+              style={{
+                paddingHorizontal: ms(5),
+              }}>
+              <View style={styles.flexViewStyle}>
+                <CustomDropdown
+                  isDarkMode={isDarkMode}
+                  mainContainerStyle={styles.dropdownViewStyle}
+                  label="Certification"
+                  value={certificateVal.certificate.name}
+                  selectedValue={value =>
+                    handleCertificatesFieldChange(
+                      certificateIndex,
+                      'certificate',
+                      value,
+                    )
+                  }
+                  data={statedata.getCertificate}
+                  // data={statedata.getSkills}
+                />
+                <CustomDropdown
+                  isDarkMode={isDarkMode}
+                  mainContainerStyle={styles.dropdownViewStyle}
+                  label="Issuing Country"
+                  value={certificateVal.issue_country.name}
+                  selectedValue={value =>
+                    handleCertificatesFieldChange(
+                      certificateIndex,
+                      'issue_country',
+                      value,
+                    )
+                  }
+                  data={statedata.getCountry}
+                />
               </View>
             </View>
-          ) : (
-            <ButtonView
-              onPress={() => {
-                let index = certificateIndex;
-                if (statedata.selectedCertificateId == certificateIndex) {
-                  setStateData(prev => ({
-                    ...prev,
-                    selectedCertificateId: null,
-                  }));
-                } else {
-                  setStateData(prev => ({
-                    ...prev,
-                    selectedCertificateId: index,
-                  }));
-                }
-              }}>
-              <View style={styles.experienceButton}>
-                <ScaleText
-                  isDarkMode={isDarkMode}
-                  fontSize={ms(15)}
-                  text={`Certificate No ${certificateIndex + 1}`}
-                />
-                <VectorIcon
-                  type="FontAwesome"
-                  name="chevron-down"
-                  size={ms(14)}
-                  color={isDarkMode ? Colors.Whiite_B1 : Colors.Black_55}
-                />
-              </View>
-            </ButtonView>
-          )}
+          </View>
         </View>
       );
     };
 
     const handleAddlicense = index => {
-      if (index > 0) return;
-      const selectedArray = statedata.License[index];
+      const selectedArray = statedata.License[index] ?? statedata.License[0];
       const invalidField = Object.values(selectedArray)?.filter(
         val => typeof val === 'string' && !val.trim(),
       );
@@ -1921,7 +1699,6 @@ const AuthProfile = ({navigation}) => {
     };
 
     const handleAddCertificate = index => {
-      if (index > 0) return;
       const selectedArray = statedata.Certificate[index];
       const invalidField = Object.values(selectedArray)?.filter(
         val => typeof val === 'string' && !val.trim(),
@@ -2065,7 +1842,7 @@ const AuthProfile = ({navigation}) => {
               {/* Step Label */}
               <View>
                 <TouchableOpacity
-                  disabled={!submited}
+                  // disabled={!submited}
                   // disabled={statedata.currentStep == null && step > steps?.[0] ? false: true}
                   // disabled={isActiveStep}
                   onPress={() => handleNext(index)}>

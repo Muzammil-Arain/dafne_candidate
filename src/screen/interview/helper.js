@@ -1,7 +1,7 @@
 import firestore from '@react-native-firebase/firestore';
 import { FIREBASE_CHAT_KEY } from '../../config/AppConfig';
 
-export const createOrFetchChatroom = async (user1Id, user2Id) => {
+export const createOrFetchChatroom = async (user1Id, user2Id,projectname) => {
   try {
     // Create a unique chatroom ID based on user IDs
     const chatroomId =
@@ -20,6 +20,7 @@ export const createOrFetchChatroom = async (user1Id, user2Id) => {
         isRead: true,
         isBlocked: false,
         blockedBy: [],
+        project_name:projectname,
         chatroomid: chatroomId,
       });
 

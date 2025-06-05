@@ -10,6 +10,7 @@ export const styles = ScaledSheet.create({
     },
     textStyle: {
       marginLeft: '20@ms', // Scaled marginLeft
+      width:'270@ms'
     },
     imageBackground: {
       alignSelf: 'center',
@@ -74,5 +75,9 @@ export const styles = ScaledSheet.create({
       marginTop: ms(5),
       marginLeft: ms(5),
     },
-    
+    titleRow:{
+      flexDirection:'row',
+      alignItems:'center',
+      justifyContent:'space-between'
+    },
   });

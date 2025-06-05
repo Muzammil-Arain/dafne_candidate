@@ -3,15 +3,13 @@ import {
   SafeAreaView,
   View,
   Text,
-  Image,
   TouchableOpacity,
   StatusBar,
-  Platform,
-  Dimensions,
   KeyboardAvoidingView,
-  ActivityIndicator,
   Linking,
   Alert,
+  Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import {
   GiftedChat,
@@ -33,7 +31,7 @@ import {getUserData} from '../../ducks/auth';
 import {useDispatch, useSelector} from 'react-redux';
 import {FIREBASE_CHAT_KEY} from '../../config/AppConfig';
 import {SEND_NOTIFICATION_API, UPLOAD_MEDIA_API} from '../../ducks/app';
-import {handleSendNotification} from '../../utils/Notification';
+import FastImageComponent from '../../components/FastImage';
 
 const {width, height} = Dimensions.get('window');
 
@@ -44,25 +42,17 @@ const App = ({navigation, route}) => {
   const selectedUserdata = route?.params?.data;
 
   const chatroomid = route?.params?.chatroom_id;
+  const projectName = route?.params?.projectName;
   const [allMsg, setAllMsg] = useState([]);
-  console.log('🚀 ~ App ~ allMsg:', allMsg);
-  const [unreadmsg, setunredMsg] = useState(0);
-  const [textMessage, setTextMessage] = useState('');
-  const [photo, setPhoto] = useState(null);
   const [sendmodal, setSendModal] = useState(false);
   const [msgsendloading, setMsgSendLoading] = useState(false);
 
-  const keyboardVerticalOffset = Platform.OS === 'ios' ? 40 : 15;
-  const [messages, setMessages] = useState([]);
-  const [isloading, setIsLoading] = useState(false);
   const chatCollectionIdRef = useRef();
   const chatRoomDetailsRef = useRef();
   const saveCollectionId = id => (chatCollectionIdRef.current = id);
   const getSavedCollectionId = chatref => chatref.current;
 
   const UploadImageOnFirebase = photo => {
-    console.log('🚀 ~ photo:', photo);
-
     return new Promise((resolve, reject) => {
       const formData = new FormData();
       formData.append('media', photo);
@@ -82,28 +72,92 @@ const App = ({navigation, route}) => {
     });
   };
 
+  // useEffect(() => {
+  //   // getMsgs();
+  //   let unsubscribe;
+
+  //   const initListeners = async () => {
+  //     unsubscribe = await getRealTimeMessages();
+  //   };
+
+  //   return () => {
+  //     if (unsubscribe) unsubscribe();
+  //     chatCollectionIdRef.current = null;
+  //     chatRoomDetailsRef.current = null;
+  //   };
+  // }, [navigation]);
+
   useEffect(() => {
-    getMsgs();
-    let unsubscribe;
+  const getMessagesAndListen = async () => {
+    const userId = selectedUserdata?.id;
+    if (!userId || !chatroomid) return;
 
-    const initListeners = async () => {
-      unsubscribe = await getRealTimeMessages();
-    };
 
-    initListeners();
+    const firstQueryResult = await firestore()
+      .collection(FIREBASE_CHAT_KEY)
+      .where('chatroomid', '==', chatroomid)
+      .get();
 
-    return () => {
-      if (unsubscribe) unsubscribe();
-      chatCollectionIdRef.current = null;
-      chatRoomDetailsRef.current = null;
-    };
-  }, [navigation]);
+    if (firstQueryResult.empty) {
+      return;
+    }
+
+    const docId = firstQueryResult.docs[0].id;
+    saveCollectionId(docId);
+
+    // Set up real-time listener
+    const unsubscribe = firestore()
+      .collection(FIREBASE_CHAT_KEY)
+      .doc(docId)
+      .collection('msg')
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(snapshot => {
+        const nextMsg = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.createdAt?.toDate) {
+            nextMsg.push({
+              _id: data._id || doc.id,
+              text: data.text || '',
+              createdAt: data.createdAt.toDate(),
+              user: {
+                _id: data.user?._id,
+                name: data.user?.name || 'Unknown',
+                avatar: data.user?.avatar || '',
+              },
+              image: data.image || null,
+              video: data.video || null,
+            });
+          }
+        });
+
+        if (nextMsg.length > 0) {
+          setAllMsg(nextMsg);
+
+          // Reset unread count for current user if viewing
+          firestore().collection(FIREBASE_CHAT_KEY).doc(docId).update({
+            [`unreadCount_${userData?.id}`]: 0,
+          });
+        }
+      });
+
+    // Save ref to unsubscribe
+    chatRoomDetailsRef.current = unsubscribe;
+  };
+
+  getMessagesAndListen();
+
+  return () => {
+    if (chatRoomDetailsRef.current) chatRoomDetailsRef.current();
+    chatCollectionIdRef.current = null;
+    chatRoomDetailsRef.current = null;
+  };
+}, [chatroomid, selectedUserdata?.id]);
 
   const getMsgs = useCallback(async () => {
     const userId = selectedUserdata?.id;
     if (!userId) return;
     try {
-      setIsLoading(true);
       let chatMesasges = [];
 
       const firstQueryResult = await firestore()
@@ -112,7 +166,6 @@ const App = ({navigation, route}) => {
         .get();
 
       if (firstQueryResult.empty) {
-        setIsLoading(false);
         return;
       }
 
@@ -131,13 +184,11 @@ const App = ({navigation, route}) => {
             if (chatMesasges.length) {
               setAllMsg(chatMesasges);
             }
-            setIsLoading(false);
           });
         getRealTimeMessages();
       });
     } catch (error) {
       console.log('🚀 Error in getMsgs:', error);
-      setIsLoading(false);
     }
   }, [chatroomid, selectedUserdata?.id]);
 
@@ -163,10 +214,8 @@ const App = ({navigation, route}) => {
         .onSnapshot(
           res => {
             const nextMsg = [];
-
             res.forEach(doc => {
               const data = doc.data();
-
               if (
                 data.createdAt &&
                 typeof data.createdAt.toDate === 'function'
@@ -188,7 +237,14 @@ const App = ({navigation, route}) => {
 
             if (nextMsg.length > 0 && nextMsg[0]?.createdAt) {
               setAllMsg(nextMsg);
-              setIsLoading(false);
+              const lastSenderId = nextMsg[0]?.user?._id;
+
+              firestore()
+                .collection(FIREBASE_CHAT_KEY)
+                .doc(isChatExist)
+                .update({
+                  [`unreadCount_${userData?.id}`]: 'jjjjj',
+                });
             }
           },
           err => {
@@ -208,8 +264,10 @@ const App = ({navigation, route}) => {
   const handleSent = async (msg, pic) => {
     const textMessage = msg[0]?.text || '';
     const isChatExist = getSavedCollectionId(chatCollectionIdRef);
-    const userId = userData?.id;
-    if (!userId || !isChatExist || (!textMessage && !pic)) return;
+    const senderId = userData?.id;
+    const receiverId = selectedUserdata?.id;
+
+    if (!senderId || !isChatExist || (!textMessage && !pic)) return;
 
     setMsgSendLoading(true);
     const uploadedMedia = pic ? await UploadImageOnFirebase(pic) : null;
@@ -219,53 +277,45 @@ const App = ({navigation, route}) => {
       text: textMessage,
       createdAt: firestore.FieldValue.serverTimestamp(),
       user: {
-        _id: userId,
+        _id: senderId,
         name: userData?.name || 'Unknown',
         avatar: userData?.profilePic || '',
       },
-      image: uploadedMedia?.uri ? uploadedMedia?.uri : null,
+      image: uploadedMedia?.uri || null,
       video: pic?.type?.startsWith('video') ? uploadedMedia : null,
     };
-    let chatRoomObj = {
-      lastMsg: textMessage == '' ? 'attachment' : textMessage,
-      createdAt: firestore.FieldValue.serverTimestamp(),
-      senderunredmsg: unreadmsg,
-      isRead: false,
-      senderId: userId,
-      reciverId: selectedUserdata?.id,
-    };
-
-    chatRoomObj[selectedUserdata?.id] = firestore.FieldValue.increment(1);
 
     try {
-      firestore()
+      // ✅ update instead of set
+      await firestore()
         .collection(FIREBASE_CHAT_KEY)
         .doc(isChatExist)
-        .set({...chatRoomObj}, {merge: true})
-        .then(res => {
-          firestore()
-            .collection(FIREBASE_CHAT_KEY)
-            .doc(isChatExist)
-            .collection('msg')
-            .add(payload);
+        .update({
+          lastMsg: textMessage === '' ? 'attachment' : textMessage,
+          createdAt: firestore.FieldValue.serverTimestamp(),
+          senderId,
+          reciverId: receiverId,
+          [`unreadCount_${receiverId}`]: firestore.FieldValue.increment(1),
         });
-      setTextMessage('');
-      setPhoto(null);
 
-     await handleSendNotification(
+      await firestore()
+        .collection(FIREBASE_CHAT_KEY)
+        .doc(isChatExist)
+        .collection('msg')
+        .add(payload);
+
+      await handleSendNotification(
         dispatch,
-        selectedUserdata?.id,
-        userData?.name,
-        textMessage == '' ? 'attachment' : textMessage,
+        receiverId,
+        `${userData?.first_name} ${userData?.last_name}`,
+        textMessage === '' ? 'attachment' : textMessage,
       );
 
-      if (sendmodal) {
-        setSendModal(false);
-      }
+      if (sendmodal) setSendModal(false);
       setMsgSendLoading(false);
     } catch (error) {
       setMsgSendLoading(false);
-      console.log('🚀 ~ file: index.js ~ line 69 ~ handleSent ~ error', error);
+      console.log('🚀 ~ handleSent error', error);
     }
   };
 
@@ -470,18 +520,24 @@ const App = ({navigation, route}) => {
             />
           </ButtonView>
           <View style={styles.profileContainer}>
-            <Image
+            {/* <Image
               source={{
                 uri:
                   selectedUserdata?.profile ?? Images.iconsource.dummyuserimage,
               }}
               style={styles.profileImage}
+            /> */}
+            <FastImageComponent
+              uri={selectedUserdata?.profile ?? ''}
+              style={styles.profileImage}
+              resizeMode="cover"
+              fallbackImage={Images.images.dummyprofile}
             />
             <View>
-              <Text
-                style={
-                  styles.profileName
-                }>{`${selectedUserdata.first_name} ${selectedUserdata.last_name}`}</Text>
+              <Text style={styles.profileName}>
+                {projectName}
+                {/* {`${selectedUserdata.first_name} ${selectedUserdata.last_name}`} */}
+              </Text>
             </View>
           </View>
         </View>

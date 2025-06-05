@@ -129,7 +129,6 @@ const EditProfile = ({ navigation }) => {
           fontSize={ms(15)}
           text={label}
         />
-        {label !== 'Email' && (
           <ButtonView onPress={() => handleEditPress(field)}>
             <Image
               tintColor={Colors.Black_8b}
@@ -138,7 +137,6 @@ const EditProfile = ({ navigation }) => {
               style={styles.editIcon}
             />
           </ButtonView>
-        )}
       </View>
       <TextInput
         ref={ref => (inputRefs.current[field] = ref)}
@@ -156,14 +154,14 @@ const EditProfile = ({ navigation }) => {
       {renderEditableField('Last Name', 'lastName')}
       {renderEditableField('Email', 'email')}
       {renderEditableField('Phone', 'phone')}
-      <ButtonView
+      {/* <ButtonView
         onPress={() => setState(prev => ({ ...prev, logoutModal: true }))}>
         <ScaleText
           fontSize={ms(17)}
           TextStyle={styles.logoutTextStyle}
           text={'logout'}
         />
-      </ButtonView>
+      </ButtonView> */}
       <AppButton type={'UPDATE_PROFILE'} title="Update" onPress={handleSave} />
       <PopupModal
         isModalVisible={state.logoutModal}

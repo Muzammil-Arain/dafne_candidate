@@ -30,7 +30,7 @@ export let steps = [
     id: 6
   },
 ];
-export const dateFormet = 'MMM Do YY';
+export const dateFormet = 'MM-DD-YYYY';
 export const dateFormetchange = 'YYYY-MM-D';
 export const progressSteps = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6];
 export const progressTextSteps = ['10%', '20%', '30%', '40%', '50%', '60%'];

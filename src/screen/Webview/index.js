@@ -9,24 +9,27 @@ import {ms} from 'react-native-size-matters';
 import datahandler from '../../helper/datahandler';
 import {screenOptions} from '../../naviagtor/config';
 import {AppButton, Background, ScaleText} from '../../common';
-import {Colors, Fonts, Metrics} from '../../theme';
+import {Colors, Fonts, Images, Metrics} from '../../theme';
 import {ButtonView, MoVideoPlayer} from '../../components';
 import HandleImagePicker from '../../components/HandleImagePicker';
 import {NavigationService, Util} from '../../utils';
-import { StackNav } from '../../naviagtor/stackkeys';
+import {StackNav} from '../../naviagtor/stackkeys';
+import {DELETE_PHOTO_VIDEOS_API} from '../../ducks/app';
+import FastImageComponent from '../../components/FastImage';
+
+const DummyImage =
+  'https://www.inzone.ae/wp-content/uploads/2025/02/dummy-profile-pic.jpg';
 
 const WebViewScreen = ({navigation, route}) => {
   const dispatch = useDispatch();
   const isDarkMode = datahandler.getAppTheme();
   const {url, title = '', type = '', id, key} = route.params || {};
-  console.log("🚀 ~ WebViewScreen ~ url:", url)
-
-  const [mediaUri, setMediaUri] = useState(url);
+  const [mediaUri, setMediaUri] = useState(url ?? DummyImage);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [apiloading, setApiLoading] = useState(false);
-  console.log("🚀 ~ WebViewScreen ~ apiloading:", apiloading)
+  const [deleteapiloading, setDeleteApiLoading] = useState(false);
   const [webviewError, setWebviewError] = useState(false);
 
   const isPhoto = type === 'photo';
@@ -71,6 +74,24 @@ const WebViewScreen = ({navigation, route}) => {
     );
   };
 
+  const handleDete = () => {
+    const mediaType = isPhoto ? 'photo' : 'video';
+    const formData = new FormData();
+    formData.append('media_type', mediaType);
+    formData.append('key', key);
+    setDeleteApiLoading(true);
+    dispatch(
+      DELETE_PHOTO_VIDEOS_API.request({
+        payloadApi: formData,
+        cb: () => {
+          setDeleteApiLoading(false);
+          Util.showMessage('Profile updated successfully!', 'success');
+          NavigationService.navigate(StackNav.Profile);
+        },
+      }),
+    );
+  };
+
   if (isPhoto || isVideo) {
     return (
       <Background style={styles.container}>
@@ -83,10 +104,16 @@ const WebViewScreen = ({navigation, route}) => {
 
           {isPhoto && (
             <ButtonView onPress={() => setShowImageModal(true)}>
-              <Image
+              {/* <Image
                 source={{uri: mediaUri}}
                 resizeMode="cover"
                 style={styles.coverImage}
+              /> */}
+              <FastImageComponent
+                uri={mediaUri ?? ''}
+                style={styles.coverImage}
+                resizeMode="cover"
+                fallbackImage={Images.images.dummyprofile}
               />
             </ButtonView>
           )}
@@ -100,6 +127,12 @@ const WebViewScreen = ({navigation, route}) => {
           )}
 
           <View style={styles.buttonContainer}>
+            <AppButton
+              ShowLinear={false}
+              isloading={deleteapiloading}
+              title="Delete"
+              onPress={() => handleDete()}
+            />
             <AppButton
               isloading={apiloading}
               title="Update"

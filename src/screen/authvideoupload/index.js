@@ -1,12 +1,24 @@
-import {ImageBackground, StyleSheet, Text, View} from 'react-native';
+import {
+  ImageBackground,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import React, {useLayoutEffect, useState} from 'react';
 import {screenOptions} from '../../naviagtor/config';
-import {AppButton, Background, LinerButton, ScaleText} from '../../common';
+import {
+  AppButton,
+  Background,
+  LinerButton,
+  ScaleText,
+  VectorIcon,
+} from '../../common';
 import {Colors, Fonts, Images, Metrics} from '../../theme';
 import {Image} from 'react-native';
 import {ButtonView, MoVideoPlayer} from '../../components';
 import {ProgressBar} from 'react-native-paper';
-import {NavigationService} from '../../utils';
+import {NavigationService, Util} from '../../utils';
 import {StackNav} from '../../naviagtor/stackkeys';
 import {ms, ScaledSheet} from 'react-native-size-matters';
 import HandleImagePicker from '../../components/HandleImagePicker';
@@ -104,20 +116,27 @@ const AuthVideoUpload = ({navigation, route}) => {
   };
 
   const handleSubmit = () => {
-    let hasError = false;
+    const hasAtLeastOneVideo = statedata.dummyData.some(
+      section => section.video,
+    );
 
-    const updatedData = statedata.dummyData.map(section => {
-      if (!section.video) {
-        hasError = true;
-        return {...section, error: 'Please upload a video for this section.'};
-      }
-      return {...section, error: null};
-    });
-
-    if (hasError) {
-      setStateData(prev => ({...prev, dummyData: updatedData}));
+    if (!hasAtLeastOneVideo) {
+      Util.showMessage('Please upload at least one video.');
+      // const updatedData = statedata.dummyData.map(section => ({
+      //   ...section,
+      //   error: 'Please upload at least one video.',
+      // }));
+      // setStateData(prev => ({...prev, dummyData: updatedData}));
       return;
     }
+
+    // If at least one video is present, clear all errors
+    const updatedData = statedata.dummyData.map(section => ({
+      ...section,
+      error: null,
+    }));
+    setStateData(prev => ({...prev, dummyData: updatedData}));
+
     setStateData(prev => ({...prev, isloading: true}));
 
     const apiMappings = [
@@ -171,15 +190,40 @@ const AuthVideoUpload = ({navigation, route}) => {
   };
 
   const renderSection = section => {
+    const [textLines, setTextLines] = useState(1);
     return (
       <View style={styles.sectionContainer} key={section.id}>
-        <ExpandableText
-          isDarkMode={isDarkMode}
-          fontFamily={Fonts.type.Mediu}
-          fontSize={ms(16)}
-          TextStyle={styles.textStyle}
-          text={section.title}
-        />
+        <View style={styles.titleRow}>
+          <ScaleText
+            isDarkMode={isDarkMode}
+            fontFamily={Fonts.type.Mediu}
+            fontSize={ms(16)}
+            TextStyle={styles.textStyle}
+            numberOfLines={textLines}
+            text={section.title}
+          />
+          <View style={styles.lineControls}>
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginTop: ms(5),
+                alignSelf: 'flex-start',
+                backgroundColor: 'black',
+                padding: ms(5),
+                borderRadius: 5,
+                marginRight: ms(10),
+              }}
+              onPress={() => setTextLines(!textLines)}>
+              <VectorIcon
+                name={textLines ? 'plus' : 'minus'}
+                type={'Entypo'}
+                color={Colors.White}
+                size={ms(17)}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
         <ImageBackground
           style={styles.imageBackground}
           resizeMode="contain"
@@ -215,7 +259,7 @@ const AuthVideoUpload = ({navigation, route}) => {
             ))}
           </View>
         </ImageBackground>
-        {section.error && <Text style={styles.errorText}>{section.error}</Text>}
+        {/* {section.error && <Text style={styles.errorText}>{section.error}</Text>} */}
       </View>
     );
   };
@@ -268,6 +312,7 @@ const styles = ScaledSheet.create({
   },
   textStyle: {
     marginLeft: '20@ms',
+    width: '280@ms',
   },
   imageBackground: {
     alignSelf: 'center',
@@ -338,5 +383,10 @@ const styles = ScaledSheet.create({
     fontSize: ms(14),
     marginLeft: ms(20),
     marginTop: ms(5),
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
 });

@@ -1,7 +1,13 @@
-import {ImageBackground, Text, View, Image} from 'react-native';
+import {
+  ImageBackground,
+  Text,
+  View,
+  Image,
+  TouchableOpacity,
+} from 'react-native';
 import React, {useLayoutEffect, useState} from 'react';
 import {screenOptions} from '../../naviagtor/config';
-import {AppButton, Background, LinerButton, ScaleText} from '../../common';
+import {AppButton, Background, LinerButton, ScaleText, VectorIcon} from '../../common';
 import {Colors, Fonts, Images} from '../../theme';
 import {ButtonView} from '../../components';
 import {ProgressBar} from 'react-native-paper';
@@ -99,22 +105,27 @@ const AuthPictureUpload = ({navigation, route}) => {
   };
 
   const UploadImage = () => {
-    let hasError = false;
+    const hasAtLeastOneSelected = statedata.dummyData.some(
+      section => section.selected,
+    );
 
-    const updatedData = statedata.dummyData.map(section => {
-      if (!section.selected) {
-        hasError = true;
-        return {...section, error: 'Please upload an image'};
-      }
-      return {...section, error: null};
-    });
-
-    if (hasError) {
-      setStateData(prev => ({...prev, dummyData: updatedData}));
+    if (!hasAtLeastOneSelected) {
+      Util.showMessage('Please upload at least one image.');
+      // const updatedData = statedata.dummyData.map(section => ({
+      //   ...section,
+      //   error: 'Please upload at least one image',
+      // }));
+      // setStateData(prev => ({...prev, dummyData: updatedData}));
       return;
     }
 
-    setStateData(prev => ({...prev, isloading: true}));
+    // Clear errors if at least one is selected
+    const updatedData = statedata.dummyData.map(section => ({
+      ...section,
+      error: null,
+    }));
+
+    setStateData(prev => ({...prev, dummyData: updatedData, isloading: true}));
 
     const API_MAPPING = [
       {key: 'professional_profile', api: PROFESSIONAL_PROFILE_API},
@@ -138,42 +149,42 @@ const AuthPictureUpload = ({navigation, route}) => {
           item.api.request({
             payloadApi: formData,
             cb: res => {
-              completedRequests++;
-              if (completedRequests === API_MAPPING.length) {
-                setStateData(prev => ({...prev, isloading: false}));
+              // completedRequests++;
+              // if (completedRequests === API_MAPPING.length) {
+              setStateData(prev => ({...prev, isloading: false}));
 
-                if (route?.params?.key == true) {
-                  const formData = new FormData();
-                  formData.append('percentage', 'AppStack');
-                  dispatch(
-                    PROFILE_PERCENTAGE_API.request({
-                      payloadApi: formData,
-                      cb: res => {
-                        NavigationService.push(StackNav.CompleteProfile, {
-                          value: '100%',
-                        });
-                      },
-                    }),
-                  );
-                } else {
-                  const formData = new FormData();
-                  formData.append(
-                    'percentage',
-                    `AuthVideoUpload / ${true} / ${null}`,
-                  );
+              if (route?.params?.key == true) {
+                const formData = new FormData();
+                formData.append('percentage', 'AppStack');
+                dispatch(
+                  PROFILE_PERCENTAGE_API.request({
+                    payloadApi: formData,
+                    cb: res => {
+                      NavigationService.push(StackNav.CompleteProfile, {
+                        value: '100%',
+                      });
+                    },
+                  }),
+                );
+              } else {
+                const formData = new FormData();
+                formData.append(
+                  'percentage',
+                  `AuthVideoUpload / ${true} / ${null}`,
+                );
 
-                  dispatch(
-                    PROFILE_PERCENTAGE_API.request({
-                      payloadApi: formData,
-                      cb: res => {
-                        NavigationService.navigate(StackNav.AuthVideoUpload, {
-                          key: true,
-                        });
-                      },
-                    }),
-                  );
-                }
+                dispatch(
+                  PROFILE_PERCENTAGE_API.request({
+                    payloadApi: formData,
+                    cb: res => {
+                      NavigationService.navigate(StackNav.AuthVideoUpload, {
+                        key: true,
+                      });
+                    },
+                  }),
+                );
               }
+              // }
             },
           }),
         );
@@ -181,43 +192,75 @@ const AuthPictureUpload = ({navigation, route}) => {
     });
   };
 
-  const renderSection = section => (
-    <View style={styles.sectionContainer} key={section.id}>
-      <ScaleText
-        isDarkMode={isDarkMode}
-        fontFamily={Fonts.type.Mediu}
-        fontSize={ms(16)}
-        TextStyle={styles.textStyle}
-        text={section.title}
-      />
-      <ImageBackground
-        style={styles.imageBackground}
-        resizeMode="contain"
-        source={Images.images.poster_background}>
-        <View style={styles.counterCircle}>
-          <ScaleText color={Colors.White} text={section.id.toString()} />
-        </View>
-        <Image
-          style={styles.imageStyle}
-          resizeMode="contain"
-          source={{uri: section.selected ? section.selected : section.imageUri}}
-        />
-        <View style={styles.buttonContainer}>
-          {['Upload', 'Replace', 'Delete'].map((title, index) => (
-            <ButtonView key={index}>
-              <LinerButton
-                title={title}
-                LinnerColourArray={LinnerColour}
-                onPress={() => handleActionButton(section, title)}
-                linearGradientStyle={styles.linearGradientStyle}
+  const renderSection = section => {
+    const [textLines, setTextLines] = useState(1); 
+
+    return (
+      <View style={styles.sectionContainer} key={section.id}>
+        <View style={styles.titleRow}>
+          <ScaleText
+            isDarkMode={isDarkMode}
+            fontFamily={Fonts.type.Mediu}
+            fontSize={ms(16)}
+            TextStyle={styles.textStyle}
+            numberOfLines={textLines}
+            text={section.title}
+
+          />
+          <View style={styles.lineControls}>
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginTop: ms(5),
+                alignSelf: 'flex-start',
+                backgroundColor: 'black',
+                padding: ms(5),
+                borderRadius: 5,
+                marginRight: ms(10),
+              }}
+              onPress={() => setTextLines(!textLines)}>
+              <VectorIcon
+                name={textLines ? 'plus' : 'minus'}
+                type={'Entypo'}
+                color={Colors.White}
+                size={ms(17)}
               />
-            </ButtonView>
-          ))}
+            </TouchableOpacity>
+          </View>
         </View>
-      </ImageBackground>
-      {section.error && <Text style={styles.errorText}>{section.error}</Text>}
-    </View>
-  );
+
+        <ImageBackground
+          style={styles.imageBackground}
+          resizeMode="contain"
+          source={Images.images.poster_background}>
+          <View style={styles.counterCircle}>
+            <ScaleText color={Colors.White} text={section.id.toString()} />
+          </View>
+          <Image
+            style={styles.imageStyle}
+            resizeMode="contain"
+            source={{
+              uri: section.selected ? section.selected : section.imageUri,
+            }}
+          />
+          <View style={styles.buttonContainer}>
+            {['Upload', 'Replace', 'Delete'].map((title, index) => (
+              <ButtonView key={index}>
+                <LinerButton
+                  title={title}
+                  LinnerColourArray={LinnerColour}
+                  onPress={() => handleActionButton(section, title)}
+                  linearGradientStyle={styles.linearGradientStyle}
+                />
+              </ButtonView>
+            ))}
+          </View>
+        </ImageBackground>
+        {section.error && <Text style={styles.errorText}>{section.error}</Text>}
+      </View>
+    );
+  };
 
   return (
     <Background isDarkMode={isDarkMode}>

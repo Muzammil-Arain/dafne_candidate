@@ -130,7 +130,7 @@ function StackScreens(loginUser) {
       <Stack.Screen
         name={StackNav.Profile}
         component={StackRoute.Profile}
-        options={{headerShown: false}}
+        options={{headerShown: false, gestureEnabled: false}}
       />
       <Stack.Screen
         name={StackNav.Projects}
@@ -140,6 +140,16 @@ function StackScreens(loginUser) {
       <Stack.Screen
         name={StackNav.Notifications}
         component={StackRoute.Notifications}
+        options={{headerShown: true}}
+      />
+      <Stack.Screen
+        name={StackNav.ProjectNotifications}
+        component={StackRoute.ProjectNotifications}
+        options={{headerShown: true}}
+      />
+       <Stack.Screen
+        name={StackNav.TermsandConditionScreen}
+        component={StackRoute.TermsandConditionScreen}
         options={{headerShown: true}}
       />
       <Stack.Screen
@@ -180,6 +190,16 @@ function StackScreens(loginUser) {
       <Stack.Screen
         name={StackNav.ProjectDescription}
         component={StackRoute.ProjectDescription}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name={StackNav.Setting}
+        component={StackRoute.Setting}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name={StackNav.ChangePassword}
+        component={StackRoute.ChangePassword}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

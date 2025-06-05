@@ -1,4 +1,4 @@
-import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {
   Image,
   StyleSheet,
@@ -24,6 +24,7 @@ import {firebaseformatDate} from './helper';
 import {GET_CHATROOM_API} from '../../ducks/app';
 import {FIREBASE_CHAT_KEY} from '../../config/AppConfig';
 import {ms} from 'react-native-size-matters';
+import { useFocusEffect } from '@react-navigation/native';
 
 const isDarkMode = datahandler.getAppTheme();
 
@@ -66,9 +67,11 @@ const Chat = ({navigation}) => {
     }, 2000);
   };
 
-  useEffect(() => {
-    getData();
-  }, [navigation]);
+  useFocusEffect(
+    useCallback(() => {
+      getData();
+    }, []),
+  );
 
   const getData = () => {
     chatRoomRef.current = [];
@@ -139,9 +142,29 @@ const Chat = ({navigation}) => {
     return fullName.includes(searchvalue?.toLowerCase() || '');
   });
 
-  const renderChatItem = ({item, index}) => {
-    console.log('🚀 ~ renderChatItem ~ item:', item);
+  const getTotalUnreadCount = async () => {
+    const userId = userData?.id;
+    try {
+      const snapshot = await firestore()
+        .collection(FIREBASE_CHAT_KEY)
+        .where(`unreadCount_${userId}`, '>', 0)
+        .get();
 
+      let totalUnread = 0;
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        totalUnread += data[`unreadCount_${userId}`] || 0;
+      });
+
+      return totalUnread;
+    } catch (error) {
+      console.log('🚨 Error getting unread count:', error);
+      return 0;
+    }
+  };
+
+  const renderChatItem = ({item, index}) => {
     const slideIn = {
       transform: [
         {
@@ -156,17 +179,19 @@ const Chat = ({navigation}) => {
 
     if (item.user) {
       const {firebaseKeys} = item;
-
-      let unreadMessage = firebaseKeys[userData?.id];
+      let projectName = item?.firebaseKeys?.project_name;
       let updatedTime =
         firebaseKeys?.createdAt && firebaseformatDate(firebaseKeys?.createdAt);
       let lastMsg = firebaseKeys?.lastMsg;
+      let unreadCount = firebaseKeys?.[`unreadCount_${userData?.id}`];
+
       return (
         <Animated.View style={[styles.chatItemContainer, slideIn]}>
           <ButtonView
             onPress={() => {
               NavigationService.navigate(StackNav.GiftChat, {
                 data: item.user,
+                projectName: projectName,
                 chatroom_id: item.firebaseKeys.chatroomid,
               });
             }}>
@@ -182,11 +207,36 @@ const Chat = ({navigation}) => {
                 <ScaleText
                   fontFamily={Fonts.type.Mediu}
                   TextStyle={styles.chatName}
-                  text={`${item.user.first_name} ${item?.user?.last_name}`}
+                  text={projectName}
+                  // text={`${item.user.first_name} ${item?.user?.last_name}`}
                 />
                 <ScaleText TextStyle={styles.chatMessage} text={lastMsg} />
               </View>
-              <ScaleText TextStyle={styles.chatTime} text={updatedTime} />
+              <View
+                style={{
+                  alignItems: 'center',
+                }}>
+                <ScaleText TextStyle={styles.chatTime} text={updatedTime} />
+                {unreadCount > 0 && (
+                  <View
+                    style={{
+                      backgroundColor: Colors.orange[500],
+                      width: ms(20),
+                      height: ms(20),
+                      borderRadius: 100,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      alignSelf: 'center',
+                    }}>
+                    <ScaleText
+                      fontSize={Fonts.size.size_12}
+                      color={Colors.Black_4A}
+                      textAlign={'center'}
+                      text={String(unreadCount)}
+                    />
+                  </View>
+                )}
+              </View>
             </View>
           </ButtonView>
         </Animated.View>
@@ -289,6 +339,5 @@ const styles = StyleSheet.create({
   chatTime: {
     fontSize: Fonts.size.size_12,
     color: Colors.DarkYellow,
-    marginLeft: 10,
   },
 });

@@ -31,6 +31,7 @@ import firestore from '@react-native-firebase/firestore';
 import Clipboard from '@react-native-clipboard/clipboard';
 import {useToast} from 'react-native-toast-notifications';
 import {Calendar} from 'react-native-calendars';
+import {handleSendNotification} from '../../utils/Notification';
 
 const isDarkMode = datahandler.getAppTheme();
 const {width, height} = Dimensions.get('screen');
@@ -61,10 +62,6 @@ const meetingOptions = [
 
 const InterviewInvitations = ({navigation, route}) => {
   const InterViewData = route?.params?.data;
-  console.log(
-    '🚀 ~ InterviewInvitations ~ InterViewData:',
-    InterViewData?.client?.phone,
-  );
   const [statedata, setStateData] = useState({
     interviewType: 'Video Call',
     interviewTime: null,
@@ -73,7 +70,6 @@ const InterviewInvitations = ({navigation, route}) => {
   const toast = useToast();
   const loginData = useSelector(getUserData);
   const [selectedDate, setSelectedDate] = useState(null);
-  console.log('🚀 ~ InterviewInvitations ~ selectedDate:', selectedDate);
   const [filteredSlots, setFilteredSlots] = useState([]);
 
   const [isloading, setIsLoading] = useState(false);
@@ -202,11 +198,10 @@ const InterviewInvitations = ({navigation, route}) => {
         CREATE_CHATROOM_API.request({
           payloadApi: values,
           cb: async data => {
-            console.log('🚀 ~ Chatroom API Response:', data);
-
             const roomId = await createOrFetchChatroom(
               loginData.id,
               InterViewData?.client?.id,
+              InterViewData?.project?.name,
             );
             if (!roomId) return;
 
@@ -217,6 +212,7 @@ const InterviewInvitations = ({navigation, route}) => {
             NavigationService.navigate(StackNav.GiftChat, {
               data: InterViewData?.client,
               chatroom_id: roomId,
+              projectName: InterViewData?.project?.name,
             });
             const unsubscribe = messagesRef.onSnapshot(snapshot => {
               // Real-time listener for messages (add logic here if needed)
@@ -236,6 +232,12 @@ const InterviewInvitations = ({navigation, route}) => {
     }
   };
 
+  function formattedId(id) {
+    if (id < 10) return `00${id}`;
+    if (id < 100) return `0${id}`;
+    return `${id}`;
+  }
+
   const handleAccept = () => {
     if (!statedata?.interviewTime?.id) {
       Util.showMessage('Time slot is required');
@@ -253,11 +255,16 @@ const InterviewInvitations = ({navigation, route}) => {
     );
     formData.append('client_user_id', InterViewData.client?.id);
     formData.append('candidate_user_id', loginData?.id);
-    console.log('🚀 ~ handleAccept ~ formData:', formData);
     dispatch(
       ACCEPT_INVITATIONS_API.request({
         payloadApi: formData,
-        cb: data => {
+        cb: async data => {
+          await handleSendNotification(
+            dispatch,
+            InterViewData?.client?.id,
+            'Success!',
+            `Candidate${formattedId(loginData?.id)} Accepted Your Invitation`,
+          );
           NavigationService.navigate(StackNav.Projects);
         },
       }),
@@ -614,7 +621,7 @@ const InterviewInvitations = ({navigation, route}) => {
       <View style={styles.timeSelectionContainer}>
         {filteredSlots.length > 0 ? (
           <View style={styles.slotsContainer}>
-            {filteredSlots.map((time, index) => (
+            {/* {filteredSlots.map((time, index) => (
               <ButtonView onPress={() => handleTimeSelection(time)} key={index}>
                 <View
                   style={[
@@ -644,7 +651,41 @@ const InterviewInvitations = ({navigation, route}) => {
                   </Text>
                 </View>
               </ButtonView>
-            ))}
+            ))} */}
+            <FlatList
+              data={filteredSlots}
+                numColumns={2}
+              columnWrapperStyle={{justifyContent: 'space-between'}}
+              contentContainerStyle={{paddingHorizontal: 16, paddingBottom: 20}}
+              keyExtractor={(item, index) =>
+                item.id?.toString() || index.toString()
+              }
+              renderItem={({item, index}) => {
+                const isSelected = statedata.interviewTime?.id === item.id;
+                const bgColor = isSelected
+                  ? isDarkMode
+                    ? Colors.more_black[900]
+                    : Colors.Yellow
+                  : isDarkMode
+                  ? Colors.Back_70
+                  : Colors.White;
+
+                const textColor = isSelected ? Colors.White : Colors.Yellow;
+
+                return (
+                  <ButtonView
+                    onPress={() => handleTimeSelection(item)}
+                    key={index}>
+                    <View
+                      style={[styles.timeButton, {backgroundColor: bgColor}]}>
+                      <Text style={[styles.timeText, {color: textColor}]}>
+                        {formatSlotTime(item.start_time, item.end_time)}
+                      </Text>
+                    </View>
+                  </ButtonView>
+                );
+              }}
+            />
           </View>
         ) : !selectedDate ? (
           <ScaleText
@@ -779,9 +820,12 @@ const styles = ScaledSheet.create({
     marginVertical: width * 0.05,
   },
   timeButton: {
-    paddingVertical: width * 0.025,
-    paddingHorizontal: width * 0.07,
-    borderRadius: 26,
+    maxWidth: '250@ms',
+    height: '35@ms',
+    padding: '5@ms',
+    // paddingVertical: width * 0.025,
+    // paddingHorizontal: width * 0.03,
+    borderRadius: 50,
     borderWidth: 1,
     borderColor: Colors.Yellow,
     justifyContent: 'center',

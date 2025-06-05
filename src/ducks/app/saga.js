@@ -59,16 +59,23 @@ import {
   DELETE_LANGUAGE_API,
   DELETE_SKILLS_API,
   DELETE_LICENSE_API,
+  DELETE_PERFERABLE_API,
+  CHANGE_PASSWORD_API,
+  DELETE_PHOTO_VIDEOS_API,
+  TERMS_AND_CONDITIONS_API,
 } from '.';
 import {
   API_GET_COUNTRIES,
   BEHIND_UNIFORM,
   CANDIDATE_PROFILE,
+  CHANGE_PASSWORD,
   CREATE_CHATROOM,
   DELETE_EDUCATION,
   DELETE_LANGUAGE,
   DELETE_LICENSE,
   DELETE_PASSPORT_VISA,
+  DELETE_PERFERABLE,
+  DELETE_PHOTO_VIDEOS,
   DELETE_RESUME,
   DELETE_SKILLS,
   DELETE_WORK_EXPERIENCE,
@@ -106,6 +113,7 @@ import {
   SAVE_NOTES,
   SEND_NOTIFICATION,
   SKILLS,
+  TERMS_AND_CONDITIONS,
   UPDATE_NOTES,
   UPDATE_PROFILE,
   UPLOAD_MEDIA,
@@ -185,7 +193,7 @@ function* watchlanguage() {
 function* watchskill() {
   while (true) {
     const {payload} = yield take(SKILLS_API.request.type);
-    const {payloadApi, cb} = payload;
+    const {payloadApi, cb,ebErr} = payload;
     try {
       const response = yield call(callRequest, SKILLS, payloadApi);
       yield put(SKILLS_API.success({data: response?.data}));
@@ -193,6 +201,7 @@ function* watchskill() {
     } catch (error) {
       yield put(SKILLS_API.failure({errorMessage: error.message}));
       Util.showMessage(error.message);
+      ebErr?.(error)
     }
   }
 }
@@ -702,16 +711,58 @@ function* watchPgetjobs() {
   }
 }
 
+function* watchchangePassword() {
+  while (true) {
+    const {payload} = yield take(CHANGE_PASSWORD_API.request.type);
+    const {payloadApi, cb} = payload;
+    try {
+      const response = yield call(callRequest, CHANGE_PASSWORD, payloadApi);
+      yield put(CHANGE_PASSWORD_API.success({data: response?.data}));
+      cb?.(response);
+    } catch (error) {
+      yield put(CHANGE_PASSWORD_API.failure({errorMessage: error.message}));
+      Util.showMessage(error.message);
+    }
+  }
+}
+
 function* watchinterViewJobs() {
   while (true) {
     const {payload} = yield take(GET_INTERVIEW_JOBS_API.request.type);
-    const {payloadApi, cb} = payload;
+    const {payloadApi, cb, params, header = {}} = payload;
     try {
-      const response = yield call(callRequest, GET_INTERVIEW_JOBS, payloadApi);
+      const response = yield call(
+        callRequest,
+        GET_INTERVIEW_JOBS,
+        payloadApi,
+        header,
+        params,
+      );
       yield put(GET_INTERVIEW_JOBS_API.success({data: response?.data}));
       cb?.(response);
     } catch (error) {
       yield put(GET_INTERVIEW_JOBS_API.failure({errorMessage: error.message}));
+      Util.showMessage(error.message);
+    }
+  }
+}
+
+function* watchDeleteJobs() {
+  while (true) {
+    const {payload} = yield take(DELETE_PERFERABLE_API.request.type);
+    const {payloadApi, cb, params, header = {}} = payload;
+    try {
+      const response = yield call(
+        callRequest,
+        DELETE_PERFERABLE,
+        payloadApi,
+        header,
+        params,
+      );
+      yield put(DELETE_PERFERABLE_API.success({data: response?.data}));
+      cb?.(response);
+    } catch (error) {
+      yield put(DELETE_PERFERABLE_API.failure({errorMessage: error.message}));
       Util.showMessage(error.message);
     }
   }
@@ -926,17 +977,11 @@ function* watchdeleteLanguage() {
     const {payload} = yield take(DELETE_LANGUAGE_API.request.type);
     const {payloadApi, cb} = payload;
     try {
-      const response = yield call(
-        callRequest,
-        DELETE_LANGUAGE,
-        payloadApi,
-      );
+      const response = yield call(callRequest, DELETE_LANGUAGE, payloadApi);
       yield put(DELETE_LANGUAGE_API.success({data: response}));
       cb?.(response);
     } catch (error) {
-      yield put(
-        DELETE_LANGUAGE_API.failure({errorMessage: error.message}),
-      );
+      yield put(DELETE_LANGUAGE_API.failure({errorMessage: error.message}));
     }
   }
 }
@@ -946,17 +991,11 @@ function* watchdeleteSkill() {
     const {payload} = yield take(DELETE_SKILLS_API.request.type);
     const {payloadApi, cb} = payload;
     try {
-      const response = yield call(
-        callRequest,
-        DELETE_SKILLS,
-        payloadApi,
-      );
+      const response = yield call(callRequest, DELETE_SKILLS, payloadApi);
       yield put(DELETE_SKILLS_API.success({data: response}));
       cb?.(response);
     } catch (error) {
-      yield put(
-        DELETE_SKILLS_API.failure({errorMessage: error.message}),
-      );
+      yield put(DELETE_SKILLS_API.failure({errorMessage: error.message}));
     }
   }
 }
@@ -966,16 +1005,44 @@ function* watchdeleteLicense() {
     const {payload} = yield take(DELETE_LICENSE_API.request.type);
     const {payloadApi, cb} = payload;
     try {
-      const response = yield call(
-        callRequest,
-        DELETE_LICENSE,
-        payloadApi,
-      );
+      const response = yield call(callRequest, DELETE_LICENSE, payloadApi);
       yield put(DELETE_LICENSE_API.success({data: response}));
       cb?.(response);
     } catch (error) {
+      yield put(DELETE_LICENSE_API.failure({errorMessage: error.message}));
+    }
+  }
+}
+
+function* watchdeltevideos() {
+  while (true) {
+    const {payload} = yield take(DELETE_PHOTO_VIDEOS_API.request.type);
+    const {payloadApi, cb} = payload;
+    try {
+      const response = yield call(callRequest, DELETE_PHOTO_VIDEOS, payloadApi);
+      yield put(DELETE_PHOTO_VIDEOS_API.success({data: response}));
+      cb?.(response);
+    } catch (error) {
+      yield put(DELETE_PHOTO_VIDEOS_API.failure({errorMessage: error.message}));
+    }
+  }
+}
+
+function* watchtermsandconditions() {
+  while (true) {
+    const {payload} = yield take(TERMS_AND_CONDITIONS_API.request.type);
+    const {payloadApi, cb} = payload;
+    try {
+      const response = yield call(
+        callRequest,
+        TERMS_AND_CONDITIONS,
+        payloadApi,
+      );
+      yield put(TERMS_AND_CONDITIONS_API.success({data: response}));
+      cb?.(response);
+    } catch (error) {
       yield put(
-        DELETE_LICENSE_API.failure({errorMessage: error.message}),
+        TERMS_AND_CONDITIONS_API.failure({errorMessage: error.message}),
       );
     }
   }
@@ -984,6 +1051,7 @@ function* watchdeleteLicense() {
 export default function* root() {
   yield fork(watchUploadmedia);
   yield fork(watchdeleteLicense);
+  yield fork(watchtermsandconditions);
   yield fork(watchdeleteLanguage);
   yield fork(watchdeleteSkill);
   yield fork(watchddeleteWorkExperience);
@@ -1037,4 +1105,7 @@ export default function* root() {
   yield fork(watchSalaryFrequency);
   yield fork(watchSalarycurrerency);
   yield fork(watchInterviewAccept);
+  yield fork(watchDeleteJobs);
+  yield fork(watchchangePassword);
+  yield fork(watchdeltevideos);
 }

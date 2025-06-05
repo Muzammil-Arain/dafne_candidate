@@ -1,5 +1,5 @@
 import {StyleSheet, View} from 'react-native';
-import React, {useEffect, useLayoutEffect, useState} from 'react';
+import React, {useCallback, useEffect, useLayoutEffect, useState} from 'react';
 import {AppButton, Background, ScaleText} from '../../common';
 import {Colors, Fonts, Metrics} from '../../theme';
 import {ButtonView, CustomDropdown, TextInputCustom} from '../../components';
@@ -16,6 +16,7 @@ import {
   GET_EMPLOYMENT_API,
   GET_EXPERIENCE_API,
   GET_INDUSTRY_API,
+  GET_INTERVIEW_JOBS_API,
   GET_JOB_API,
   PREFERABLE_INDUSTRY_API,
   PROFILE_PERCENTAGE_API,
@@ -31,6 +32,7 @@ const FrequencyData = [{name: 'Monthly'}, {name: 'yearly'}];
 const What = ({navigation, route}) => {
   const dispatch = useDispatch();
   const {perID, isFromKeyFalse} = route?.params;
+  console.log('🚀 ~ What ~ perID:', perID);
   const [statedata, setStateData] = useState({
     isBackgound: true,
     relevantJob: true,
@@ -43,16 +45,22 @@ const What = ({navigation, route}) => {
     getEmployment: [],
     getJob: [],
     getexperience: [],
+    Errfrequencyvalue: false,
+    Errcurrencyvalue: false,
     frequencyvalue: null,
     currencyvalue: null,
   });
+  console.log("🚀 ~ What ~What ~ statedata statedata:", statedata?.currencyvalue)
 
-  const [formObj, betweenProps, andProps, NegotiableProps] =
-    useHookForm(
-      ['between', 'and', 'negotiable'],
-      {negotiable: false},
-      ValidationSchema.what,
-    );
+  const [jobsData, setJobsData] = useState(null);
+  console.log('🚀 ~ What ~ jobsData:', jobsData);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const [formObj, betweenProps, andProps, NegotiableProps] = useHookForm(
+    ['between', 'and', 'negotiable'],
+    {negotiable: false},
+    ValidationSchema.what,
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions(
@@ -67,7 +75,70 @@ const What = ({navigation, route}) => {
 
   useEffect(() => {
     handleGetAPISData();
+    getNotificationData();
   }, [navigation]);
+
+  const getNotificationData = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      dispatch(
+        GET_INTERVIEW_JOBS_API.request({
+          payloadApi: {},
+          params: perID,
+          cb: async res => {
+            if (res?.data?.employee_type) {
+              console.log('🚀 ~ getNotificationData ~ res?.data:', res?.data?.salary_between);
+              setJobsData(res?.data);
+              setStateData(prev => ({
+                ...prev,
+                selectedindustry: {
+                  id: res?.data?.industry_id,
+                  name: res?.data?.industry,
+                },
+                selectedtype: {
+                  id: res?.data?.employee_type_id,
+                  name: res?.data?.employee_type,
+                },
+                selectedposition: {
+                  id: res?.data?.industry_id,
+                  name: res?.data?.position_looking_for,
+                },
+                selectedlevel: {
+                  id: res?.data?.level_of_experience_id,
+                  name: res?.data?.level_of_experience,
+                },
+                frequencyvalue: {
+                  name: res?.data?.salary_frequency,
+                },
+                currencyvalue: {
+                  id: res?.data?.salary_currency_id,
+                  name: res?.data?.salary_currency,
+                  code:res?.data?.salary_currency_code,
+                  symbol:res?.data?.salary_currency_symbol
+                },
+                isBackgound:
+                  res?.data?.offer_from_other_industries == 1 ? true : false,
+                relevantJob:
+                  res?.data?.have_relevant_certificate_license == 1
+                    ? true
+                    : false,
+              }));
+              formObj.setValue('between',res?.data?.salary_between > 0 && res?.data?.salary_between);
+              formObj.setValue('and',res?.data?.salary_and > 0 &&  res?.data?.salary_and);
+              formObj.setValue(
+                'negotiable',
+                res?.data?.salary_negotiable == 1 ? true : false,
+              );
+              setRefreshing(false);
+            }
+          },
+        }),
+      );
+    } catch (error) {
+      console.log('Error fetching data:', error);
+      setRefreshing(false);
+    }
+  }, [dispatch]);
 
   const handleGetAPISData = async () => {
     const apiRequests = [
@@ -127,11 +198,15 @@ const What = ({navigation, route}) => {
 
   const validateFields = () => {
     let errors = {};
+
     if (!statedata.selectedindustry)
       errors.selectedindustry = 'This field is required';
+
     if (!statedata.selectedtype) errors.selectedtype = 'This field is required';
+
     if (!statedata.selectedposition)
       errors.selectedposition = 'This field is required';
+
     if (!statedata.selectedlevel)
       errors.selectedlevel = 'This field is required';
 
@@ -141,40 +216,66 @@ const What = ({navigation, route}) => {
   };
 
   const handleApiSumbit = () => {
-    // NavigationService.navigate(StackNav.Where, { key: true });
-    // return
-    if (!validateFields()) return;
+    const isValid = validateFields();
+
+    if (!isValid) return;
+
+    // Additional validation for frequencyvalue and currencyvalue
+    let updateErrors = {};
+
+    if (!statedata.frequencyvalue) updateErrors.Errfrequencyvalue = true;
+
+    // if (!statedata.currencyvalue) updateErrors.Errcurrencyvalue = true;
+
+    if (Object.keys(updateErrors).length > 0) {
+      setStateData(prev => ({...prev, ...updateErrors}));
+      return; // prevent submission if frequency/currency is missing
+    }
+
     handleSubmit();
   };
 
   const handleSubmit = formObj.handleSubmit(values => {
-    if (!validateFields()) return;
     console.log('🚀 ~ What ~ values:', values);
+
+    if (!validateFields()) return;
 
     const {and, between, currency, negotiable} = values;
     const formdata = {
       preferable_industry_id: perID,
       industry_id: statedata.selectedindustry?.id,
-      // type: statedata.selectedtype,
       employee_type_id: statedata.selectedtype?.id,
       position_looking_for: statedata.selectedposition?.id,
-      // level: statedata.selectedlevel,
       level_of_experience_id: statedata.selectedlevel?.id,
-      salary_between: between,
-      salary_and: and,
-      salary_frequency: statedata.frequencyvalue?.name,
-      salary_currency: statedata.currencyvalue?.name,
       salary_negotiable: negotiable ? 1 : 0,
       have_relevant_certificate_license: statedata.relevantJob ? 1 : 0,
       offer_from_other_industries: statedata.isBackgound ? 1 : 0,
       current_location: 1,
       location_for_job: 1,
+      ...(between && {salary_between: between}),
+      ...(and && {salary_and: and}),
+      ...(statedata.frequencyvalue?.name && {
+        salary_frequency: statedata.frequencyvalue.name,
+      }),
+      ...(statedata.currencyvalue?.id && {
+        salary_currency: statedata.currencyvalue.id,
+      }),
     };
+
+    console.log('🚀 ~ What ~ formdata:', formdata);
 
     dispatch(
       PREFERABLE_INDUSTRY_API.request({
         payloadApi: formdata,
         cb: res => {
+          if (isFromKeyFalse) {
+            NavigationService.navigate(StackNav.Where, {
+              key: true,
+              perID: perID,
+              jobsData: jobsData,
+            });
+            return;
+          }
           const formData = new FormData();
           formData.append('percentage', `Where / ${true} / ${perID}`);
           const isNewProject = datahandler.getisNewProject();
@@ -201,6 +302,7 @@ const What = ({navigation, route}) => {
                   NavigationService.navigate(StackNav.Where, {
                     key: true,
                     perID: perID,
+                    jobsData: jobsData,
                   });
                 }
               },
@@ -358,12 +460,14 @@ const What = ({navigation, route}) => {
       />
       <View style={styles.flexViewStyle}>
         <TextInputCustom
+          keyboardType="numeric"
           isDarkMode={isDarkMode}
           cuntomStyle={styles.cuntomStyle}
           label="Between"
           {...betweenProps}
         />
         <TextInputCustom
+          keyboardType="numeric"
           isDarkMode={isDarkMode}
           cuntomStyle={styles.cuntomStyle}
           label="And"
@@ -371,49 +475,98 @@ const What = ({navigation, route}) => {
         />
       </View>
       <View style={styles.flexViewStyle}>
-        {/* <TextInputCustom
-          isDarkMode={isDarkMode}
-          cuntomStyle={styles.cuntomStyle}
-          label="Frequency"
-          {...frequencyProps}
-        /> */}
-        <CustomDropdown
-          isDarkMode={isDarkMode}
-          mainContainerStyle={styles.cuntomStyle}
-          label="Frequency"
-          value={statedata?.frequencyvalue?.name}
-          selectedValue={value => {
-            setStateData(prev => ({...prev, frequencyvalue: value}));
-            // Uncomment and use below if you're updating state
-            // handleLicenseFieldChange(licenseIndex, 'license', value);
-          }}
-          data={statedata.getfreqency}
-        />
+        <View>
+          <CustomDropdown
+            isDarkMode={isDarkMode}
+            mainContainerStyle={styles.cuntomStyle}
+            label="Frequency"
+            value={statedata?.frequencyvalue?.name}
+            selectedValue={value => {
+              setStateData(prev => ({
+                ...prev,
+                frequencyvalue: value,
+                Errfrequencyvalue: false,
+              }));
+            }}
+            data={statedata.getfreqency}
+          />
+          {statedata.Errfrequencyvalue && (
+            <View style={{position: 'absolute', bottom: -15, left: ms(10)}}>
+              <ScaleText
+                fontSize={ms(12)}
+                color={Colors.red[500]}
+                text={'This field is required'}
+              />
+            </View>
+          )}
+        </View>
 
-        {/* <TextInputCustom
-          isDarkMode={isDarkMode}
-          cuntomStyle={styles.cuntomStyle}
-          label="Currency"
-          {...currencyProps}
-        /> */}
-        <CustomDropdown
-          isDarkMode={isDarkMode}
-          mainContainerStyle={styles.cuntomStyle}
-          label="Currency"
-          value={statedata?.currencyvalue?.name}
-          selectedValue={value => {
-            setStateData(prev => ({...prev, currencyvalue: value}));
-            // Uncomment and use below if you're updating state
-            // handleLicenseFieldChange(licenseIndex, 'license', value);
-          }}
-          data={statedata.getcurrency}
-        />
+        <View>
+          <CustomDropdown
+            isDarkMode={isDarkMode}
+            mainContainerStyle={styles.cuntomStyle}
+            label="Currency"
+            value={statedata?.currencyvalue?.name ? `${statedata?.currencyvalue?.code}-${statedata?.currencyvalue?.symbol}` : null}
+            selectedValue={value => {
+              setStateData(prev => ({
+                ...prev,
+                currencyvalue: value,
+                Errcurrencyvalue: false,
+              }));
+            }}
+            data={statedata.getcurrency}
+          />
+          {statedata.Errcurrencyvalue && (
+            <View style={{position: 'absolute', bottom: -15, left: ms(10)}}>
+              <ScaleText
+                fontSize={ms(12)}
+                color={Colors.red[500]}
+                text={'This field is required'}
+              />
+            </View>
+          )}
+        </View>
       </View>
+
       <View style={styles.checkboxContainer}>
         <CheckBox
           isDarkMode={isDarkMode}
           {...NegotiableProps}
           text={'Negotiable?'}
+          onChangeCustom={async val => {
+            if (!val) {
+              const values = formObj.getValues();
+              const {between, and} = values ?? '';
+              if (!between) {
+                formObj.setError('between', {
+                  type: 'manual',
+                  message: 'Please enter Between',
+                });
+              }
+              if (!and) {
+                formObj.setError('and', {
+                  type: 'manual',
+                  message: 'Please enter And',
+                });
+                // if (!statedata.currencyvalue) {
+                //   setStateData(prev => ({...prev, Errcurrencyvalue: true}));
+                // }
+              }
+            } else {
+              formObj.setError('and', {
+                type: 'manual',
+                message: null,
+              });
+              formObj.setError('between', {
+                type: 'manual',
+                message: null,
+              });
+              setStateData(prev => ({...prev, Errcurrencyvalue: false}));
+            }
+            // useHookField(formObj, 'and')
+            // await formObj.setError('and', 'acbde')
+            // console.log(":rocket: ~ ProjectCreateSecondStep ~ val:", val)
+          }}
         />
       </View>
       <AppButton

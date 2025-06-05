@@ -10,12 +10,12 @@ export let steps = [
       id: 2
     },
     {
-      name: 'Passport & Work Visa',
+      name: 'Passport(s) & Visa(s)',
       submited: false,
       id: 3
     },
     {
-      name: 'Language',
+      name: 'Languages',
       submited: false,
       id: 4
     },
@@ -25,7 +25,7 @@ export let steps = [
       id: 5
     },
     {
-      name: 'Valid License & Certificates',
+      name: 'Valid Licenses & Certificates',
       submited: false,
       id: 6
     },

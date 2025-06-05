@@ -61,8 +61,10 @@ export const DELETE_PASSPORT_VISA_API = makeRequesActions('DELETE_PASSPORT_VISA'
 export const DELETE_LANGUAGE_API = makeRequesActions('DELETE_LANGUAGE');
 export const DELETE_SKILLS_API = makeRequesActions('DELETE_SKILLS');
 export const DELETE_LICENSE_API = makeRequesActions('DELETE_LICENSE');
-
-
+export const DELETE_PERFERABLE_API = makeRequesActions('DELETE_PERFERABLE');
+export const CHANGE_PASSWORD_API = makeRequesActions('CHANGE_PASSWORD');
+export const DELETE_PHOTO_VIDEOS_API = makeRequesActions('DELETE_PHOTO_VIDEOS');
+export const TERMS_AND_CONDITIONS_API = makeRequesActions('TERMS_AND_CONDITIONS');
 
 
 const initalState = {
@@ -71,6 +73,10 @@ const initalState = {
 
 export default createReducer(initalState, builder => {
   builder.addCase(LOGOUT_API.success, (state, action) => {});
+  builder.addCase(CHANGE_PASSWORD_API.success, (state, action) => {});
+  builder.addCase(TERMS_AND_CONDITIONS_API.success, (state, action) => {});
+  builder.addCase(DELETE_PHOTO_VIDEOS_API.success, (state, action) => {});
+  builder.addCase(DELETE_PERFERABLE_API.success, (state, action) => {});
   builder.addCase(SEND_NOTIFICATION_API.success, (state, action) => {});
   builder.addCase(SKILLS_API.success, (state, action) => {});
   builder.addCase(INTERVIEW_ACCEPT_API.success, (state, action) => {});

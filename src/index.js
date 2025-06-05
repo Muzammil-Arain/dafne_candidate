@@ -10,14 +10,15 @@ import InternetConnectionAlert from 'react-native-internet-connection-alert';
 
 // Local import
 import {} from './screen';
-import { Colors } from './theme';
+import {Colors} from './theme';
 import configureStore from './store';
 import AppNavigator from './naviagtor';
 import geoCode from '../src/utils/geoCode';
 import {GalleryPicker} from './components';
 import NetworkInfo from './utils/NetworkInfo';
 import datahandler from './helper/datahandler';
-import {RequestUserPermission} from './utils/Notification';
+import {requestNotificationPermission, RequestUserPermission} from './utils/Notification';
+import { startNotificationListener } from './utils/NotificationListner';
 
 LogBox.ignoreLogs(['Warning: ...']);
 LogBox.ignoreAllLogs();
@@ -36,7 +37,8 @@ const App = () => {
 
   useEffect(() => {
     configureStore(onStoreConfigure);
-
+    startNotificationListener();
+    requestNotificationPermission();
     const initialColorScheme = Appearance.getColorScheme();
     const darkMode = initialColorScheme === 'dark';
     console.log('Initial color scheme:', darkMode);

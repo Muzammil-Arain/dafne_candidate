@@ -17,6 +17,7 @@ const TextInputCustom = ({
   multiline,
   value,
   isDarkMode,
+  keyboardType,
   optional = false, // Add an optional prop
   onChangeText,     // Callback for directly handling text changes
 }) => {
@@ -24,6 +25,7 @@ const TextInputCustom = ({
 
   const renderInput = ({onChange, value}) => (
     <TextInput
+    keyboardType={keyboardType}
       textAlignVertical={textAlignVertical}
       label={label}
       multiline={multiline}

@@ -28,6 +28,10 @@ function InterViewStack() {
         name={StackNav.InterviewInvitations}
         component={StackRoute.InterviewInvitations}
       />
+      <Stack.Screen
+        name={StackNav.ProjectNotifications}
+        component={StackRoute.ProjectNotifications}
+      />
     </Stack.Navigator>
   );
 }
@@ -58,7 +62,7 @@ function ProfileStack() {
           headerShown: true,
         }}
       />
-       <Stack.Screen
+      <Stack.Screen
         name={StackNav.MyBackground}
         component={StackRoute.MyBackground}
         options={{
@@ -80,6 +84,15 @@ function MoreStack() {
   return (
     <Stack.Navigator {...{screenOptions}}>
       <Stack.Screen name={StackNav.More} component={StackRoute.More} />
+      <Stack.Screen name={StackNav.Setting} component={StackRoute.Setting} />
+      <Stack.Screen
+        name={StackNav.TermsandConditionScreen}
+        component={StackRoute.TermsandConditionScreen}
+      />
+      <Stack.Screen
+        name={StackNav.ChangePassword}
+        component={StackRoute.ChangePassword}
+      />
     </Stack.Navigator>
   );
 }

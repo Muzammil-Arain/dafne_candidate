@@ -72,7 +72,7 @@ const Login = ({ navigation }) => {
         setTimeout(() => {
           refRBSheet.current?.open();
         }, 1000);
-        setStateData(prev => ({ ...prev, items: storedUserData }));
+        setStateData(prev => ({ ...prev, items: storedUserData?.reverse() }));
       }
     } catch (error) {
       console.log('Error reading userData from AsyncStorage:', error);
@@ -169,7 +169,6 @@ const Login = ({ navigation }) => {
         cb: async res => {
           
           refRBSheet.current.close();
-         
           const { percentage } = res?.data?.user || {};
           // NavigationService.navigate(StackNav.AuthVideoUpload);
           // return

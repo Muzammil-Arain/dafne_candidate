@@ -49,13 +49,14 @@ function* watchLogin() {
 function* watchRegisterPage1() {
   while (true) {
     const { payload } = yield take(REGISTER_STEP_1_API.request.type);
-    const { payloadApi, cb } = payload;
+    const { payloadApi, cb ,cbErr} = payload;
     try {
       const response = yield call(callRequest, SIGNUP_STEP_1, payloadApi);
       yield put(REGISTER_STEP_1_API.success({ data: response?.data }));
       cb?.(response);
     } catch (error) {
       yield put(REGISTER_STEP_1_API.failure({ errorMessage: error.message }));
+      cbErr?.(error)
       Util.showMessage(error.message);
     }
   }
@@ -109,13 +110,14 @@ function* watchForgotPassword() {
 function* watchVerifyCode() {
   while (true) {
     const { payload } = yield take(OTP_VERIFICATION_API.request.type);
-    const { payloadApi, cb } = payload;
+    const { payloadApi, cb ,cbErr} = payload;
     try {
       const response = yield call(callRequest, OTP_VERIFICATION, payloadApi);
       yield put(OTP_VERIFICATION_API.success({ data: response?.data }));
       cb?.(response);
     } catch (error) {
       yield put(OTP_VERIFICATION_API.failure({ errorMessage: error.message }));
+      cbErr?.(error);
       Util.showMessage(error.message);
     }
   }
@@ -124,7 +126,7 @@ function* watchVerifyCode() {
 function* watchVerifyEmail() {
   while (true) {
     const { payload } = yield take(VERIFY_EMAIL_API.request.type);
-    const { payloadApi, cb } = payload;
+    const { payloadApi, cb,cbErr } = payload;
     try {
       const response = yield call(callRequest, VERIFY_EMAIL, payloadApi);
       yield put(VERIFY_EMAIL_API.success({ data: response?.data }));
@@ -132,6 +134,7 @@ function* watchVerifyEmail() {
     } catch (error) {
       yield put(VERIFY_EMAIL_API.failure({ errorMessage: error.message }));
       Util.showMessage(error.message);
+      cbErr?.(error)
     }
   }
 }

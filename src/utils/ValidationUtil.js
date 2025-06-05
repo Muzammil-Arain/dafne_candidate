@@ -1,8 +1,8 @@
 /** @format */
 
-import { yupResolver } from '@hookform/resolvers/yup';
-import { useForm } from 'react-hook-form';
-import { useRef } from 'react';
+import {yupResolver} from '@hookform/resolvers/yup';
+import {useForm} from 'react-hook-form';
+import {useRef} from 'react';
 import * as yup from 'yup';
 
 /*********************************************************
@@ -112,6 +112,7 @@ export const Validation = {
         .required(displayMsg(title, type))
     );
   },
+  termNotRequired: title => yup.bool().notRequired(),
 
   notRequired: () => yup.string().notRequired(),
 
@@ -227,8 +228,8 @@ export const Validation = {
 };
 
 export const useHookField = (formObj, name) => {
-  const { control, formState } = formObj;
-  const { errors } = formState;
+  const {control, formState} = formObj;
+  const {errors} = formState;
   const inputRef = useRef(null);
 
   const error = errors?.[name]?.message ?? undefined;
@@ -289,11 +290,24 @@ export const ValidationSchema = {
     // type: Validation.required('Type'),
     // position: Validation.required('Position'),
     // experience: Validation.required('Experience'),
-    between: Validation.required('Between'),
-    and: Validation.required('And'),
+    // between: Validation.required('Between'),
+    // and: Validation.required('And'),
     // currency: Validation.required('Currency'),
-    negotiable: Validation.required('Negotiable'),
+    negotiable: Validation.termNotRequired('Negotiable'),
+
+    between: yup.string().when('negotiable', {
+      is: false,
+      then: Validation.requiredWithoutTrim('Between'),
+      otherwise: Validation.notRequired(),
+    }),
+
+    and: yup.string().when('negotiable', {
+      is: false,
+      then: Validation.requiredWithoutTrim('And'),
+      otherwise: Validation.notRequired(),
+    }),
   }),
+
   projectName: yup.object().shape({
     projectname: Validation.requiredWithoutTrim('project name'),
   }),
@@ -301,6 +315,11 @@ export const ValidationSchema = {
     notes: Validation.requiredWithoutTrim('notes'),
   }),
   ResetPassword: yup.object().shape({
+    password: Validation.password('password'),
+    confirmPassword: Validation.passwordMatch('password', 'confirm password'),
+  }),
+  NewPassword: yup.object().shape({
+    oldpassword: Validation.password('old password'),
     password: Validation.password('password'),
     confirmPassword: Validation.passwordMatch('password', 'confirm password'),
   }),
@@ -327,4 +346,4 @@ export const ValidationSchema = {
   }),
 };
 
-export default { ValidationSchema, useHookField, useHookForm };
+export default {ValidationSchema, useHookField, useHookForm};

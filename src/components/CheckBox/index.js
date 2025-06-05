@@ -15,6 +15,7 @@ const AppCheckBox = ({
   CheckBoxTextStyle,
   text,
   isDarkMode,
+  onChangeCustom,
   isChecked, // New prop to handle true/false condition
 }) => {
   const checkBox = ({onChange, value}) => {
@@ -36,14 +37,21 @@ const AppCheckBox = ({
     return (
       <View style={{flexDirection: 'row', alignItems: 'center'}}>
         <TouchableOpacity
-          style={[styles.container,{
-            backgroundColor:isDarkMode ? Colors.more_black[800]:Colors.Whiite_FA,
-            borderColor:isDarkMode ? Colors.Whiite_CC:Colors.Border,
-          }]}
+          style={[
+            styles.container,
+            {
+              backgroundColor: isDarkMode
+                ? Colors.more_black[800]
+                : Colors.Whiite_FA,
+              borderColor: isDarkMode ? Colors.Whiite_CC : Colors.Border,
+            },
+          ]}
           onPress={() => {
             if (onPress) {
+              onChangeCustom && onChangeCustom(!value);
               onPress(!value); // Trigger external handler
             } else {
+              onChangeCustom && onChangeCustom(!value);
               onChange(!value); // Fallback to internal state change
             }
           }}>
@@ -68,7 +76,7 @@ const AppCheckBox = ({
             marginLeft: ms(10),
           }}>
           <ScaleText
-          isDarkMode={isDarkMode}
+            isDarkMode={isDarkMode}
             text={text}
             fontFamily={Fonts.type.Roman}
             fontSize={ms(14)}

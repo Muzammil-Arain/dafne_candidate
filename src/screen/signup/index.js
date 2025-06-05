@@ -71,7 +71,6 @@ const SignUp = () => {
     formData.append('phone', values.phone);
     formData.append('country_id', '2');
 
-    console.log('🚀 ~ SignUp ~ formData:', formData);
     setStateData(prev => ({...prev, isLoading: 'SIGNUP_STEP_1'}));
     dispatch(
       REGISTER_STEP_1_API.request({
@@ -83,6 +82,12 @@ const SignUp = () => {
             isLoading: false,
             nextStep: true,
             setupOneResponce: data,
+          }));
+        },
+        cbErr: Error => {
+          setStateData(prev => ({
+            ...prev,
+            isLoading: false,
           }));
         },
       }),

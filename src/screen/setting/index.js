@@ -12,18 +12,11 @@ import {useDispatch} from 'react-redux';
 import {LOGOUT_API} from '../../ducks/app';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {loginAccesToken} from '../../ducks/auth';
+import {LocalStoragekey} from '../../config/AppConfig';
 
 const isDarkMode = datahandler.getAppTheme();
 
-const options = [
-  {text: 'Telentoneed Assistance', icon: Images.icon.more_icon},
-  {text: 'Terms and Conditions', icon: Images.icon.more_icon},
-  {text: 'Setting', icon: Images.icon.more_icon},
-  {text: 'Bill Payments', icon: Images.icon.more_icon},
-  // { text: 'Logout', icon: Images.icon.more_icon },
-];
-
-const More = ({navigation}) => {
+const Setting = ({navigation}) => {
   const dispatch = useDispatch();
   const [state, setState] = useState({
     logoutModal: false,
@@ -36,20 +29,13 @@ const More = ({navigation}) => {
         {route: null, navigation},
         () => navigation.goBack(),
         isDarkMode,
-        'More',
-        false,
+        'Setting',
         false,
       ),
     );
   }, [navigation, isDarkMode]);
 
   const handlepress = item => {
-    console.log('🚀 ~ More ~ item:', item);
-    if (item.text == options[2].text) {
-      NavigationService.navigate(StackNav.Setting);
-    } else if (item.text == options[1].text) {
-      NavigationService.navigate(StackNav.TermsandConditionScreen);
-    }
     return;
     if (item.text == options[4].text) {
       setState(prev => ({...prev, logoutModal: true}));
@@ -57,22 +43,35 @@ const More = ({navigation}) => {
   };
 
   const handleLogOut = async () => {
-    navigation.reset({
-      index: 0,
-      routes: [{name: 'Login'}],
-    });
+    setState(prev => ({...prev, logoutModal: false}));
+
+    // Dispatch token removal action
     dispatch({
       type: loginAccesToken.type,
       payload: {
         token: false,
       },
     });
-    await AsyncStorage.clear();
-    return;
+
+    // Clear all AsyncStorage except LOGIN_USER
+    const keysToKeep = [LocalStoragekey.LOGIN_USER]; // Keep LOGIN_USER
+    const allKeys = await AsyncStorage.getAllKeys();
+    const keysToRemove = allKeys.filter(key => !keysToKeep.includes(key));
+    console.log('🚀 ~ handleLogOut ~ keysToRemove:', keysToRemove);
+
+    await AsyncStorage.multiRemove(keysToRemove);
+
     dispatch({
       type: LOGOUT_API.type,
     });
-    await AsyncStorage.clear();
+
+    navigation.reset({
+      index: 0,
+      routes: [{name: 'Login'}],
+    });
+    datahandler.setisNewProject(null);
+    // Close the drawer and reset navigation again
+    return;
     navigation.closeDrawer();
     navigation.reset({
       index: 0,
@@ -86,23 +85,28 @@ const More = ({navigation}) => {
         style={{
           marginTop: ms(20),
         }}>
-        {options?.map((item, index) => (
-          <ButtonView onPress={() => handlepress(item)} key={index}>
-            <View style={styles.optionContainer}>
-              <Image
-                source={item.icon}
-                resizeMode="contain"
-                style={styles.icon}
-              />
-              <ScaleText
-                isDarkMode={isDarkMode}
-                color={Colors.Black}
-                fontSize={ms(15)}
-                text={item.text}
-              />
-            </View>
+        <View style={styles.optionContainer}>
+          <ButtonView
+            onPress={() => NavigationService.navigate(StackNav.ChangePassword)}>
+            <ScaleText
+              isDarkMode={isDarkMode}
+              color={Colors.Black}
+              fontSize={ms(15)}
+              text={'Change Password'}
+            />
           </ButtonView>
-        ))}
+        </View>
+        <View style={styles.optionContainer}>
+          <ButtonView
+            onPress={() => setState(prev => ({...prev, logoutModal: true}))}>
+            <ScaleText
+              isDarkMode={isDarkMode}
+              color={Colors.Black}
+              fontSize={ms(15)}
+              text={'Logout'}
+            />
+          </ButtonView>
+        </View>
       </View>
       <PopupModal
         isModalVisible={state.logoutModal}
@@ -123,13 +127,16 @@ const More = ({navigation}) => {
   );
 };
 
-export default More;
+export default Setting;
 
 const styles = ScaledSheet.create({
   optionContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: '20@ms',
+    borderBottomWidth: 0.5,
+    paddingBottom: '10@ms',
+    borderBottomColor: Colors.Back_c8,
   },
   icon: {
     width: '40@ms',

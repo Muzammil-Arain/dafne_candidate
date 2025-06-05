@@ -39,12 +39,7 @@ const ExpandableText = ({text, numberOfLines = 2}) => {
             marginRight: ms(10),
           }}
           onPress={() => setIsExpanded(!isExpanded)}>
-          <VectorIcon
-            name={!isExpanded ? 'plus' : 'minus'}
-            type={'Entypo'}
-            color={Colors.White}
-            size={ms(17)}
-          />
+          <Text style={styles.text}>{text}</Text>
         </TouchableOpacity>
       )}
     </View>

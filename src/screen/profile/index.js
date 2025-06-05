@@ -12,6 +12,8 @@ import {
   Alert,
   Platform,
   RefreshControl,
+  KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {ms, ScaledSheet} from 'react-native-size-matters';
@@ -23,7 +25,13 @@ import datahandler from '../../helper/datahandler';
 import {Colors, Fonts, Images} from '../../theme';
 import {StackNav} from '../../naviagtor/stackkeys';
 import DocumentPicker from 'react-native-document-picker';
-import {PopupModal, ScaleText, VectorIcon} from '../../common';
+import {
+  Background,
+  ImageIcon,
+  PopupModal,
+  ScaleText,
+  VectorIcon,
+} from '../../common';
 import {
   ButtonView,
   Loader,
@@ -41,6 +49,7 @@ import {
   DELETE_RESUME_API,
   FAVORITE_HOBBY_API,
   GET_NOTES_API,
+  LOGOUT_API,
   PROFESSIONAL_PROFILE_API,
   PROFILE_LOCK_API,
   SAVE_NOTES_API,
@@ -62,12 +71,14 @@ import {BASE_URL} from '../../config/WebService';
 import {Icon} from 'react-native-elements';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import {useFocusEffect, useIsFocused} from '@react-navigation/native';
+import {LocalStoragekey} from '../../config/AppConfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ExpandableText from './helper';
+import FastImageComponent from '../../components/FastImage';
 
 const isDarkMode = datahandler.getAppTheme();
 const {width, height} = Dimensions.get('window');
 
-const Profile_Image =
-  'https://t4.ftcdn.net/jpg/00/60/74/45/360_F_60744518_hcYsaXi8wPL8jD5bx3LJMPnMo7TloqdM.jpg';
 const DummyImage =
   'https://www.inzone.ae/wp-content/uploads/2025/02/dummy-profile-pic.jpg';
 
@@ -77,6 +88,7 @@ const Profile = ({navigation, route}) => {
   const userData = useSelector(getUserData);
   const focused = useIsFocused();
   const refRBSheet = useRef();
+  const [numOfLinesMap, setNumOfLinesMap] = useState({});
   const [refreshing, setRefreshing] = useState(false);
   const [statedata, setStateData] = useState({
     expandedIndex: null,
@@ -103,13 +115,15 @@ const Profile = ({navigation, route}) => {
     userNotes: '',
     setVideoUrl: false,
   });
+  const flatListRef = useRef();
+  console.log('====================================');
+  console.log(statedata?.userProfileData, 'statedata?.userProfileData');
+  console.log('====================================');
 
-  console.log('====================================');
-  console.log(
-    statedata?.userProfileData,
-    'statedata.setVideoUrlstatedata.setVideoUrlstatedata.setVideoUrl',
-  );
-  console.log('====================================');
+  const [state, setState] = useState({
+    logoutModal: false,
+    logoutLoading: false,
+  });
 
   const ProfileDataArray = [
     // {
@@ -250,11 +264,13 @@ const Profile = ({navigation, route}) => {
           action.request({
             payloadApi: {},
             cb: res => {
-              console.log('🚀 ~ fetchAndUpdateState ~ res:', res?.data?.user);
+              console.log('🚀 ~ fetchAndUpdateState ~ res:', res);
               setStateData(prev => ({
                 ...prev,
                 userProfileData: res?.data?.user,
-                userNotes: res?.data?.user?.notes?.[0]?.note,
+                userNotes:
+                  res?.data?.user?.notes?.[res?.data?.user?.notes.length - 1]
+                    ?.note,
                 showProfile:
                   res?.data?.user?.is_profile_locked == 0 ? true : false,
               }));
@@ -298,6 +314,7 @@ const Profile = ({navigation, route}) => {
             ...prev,
             notesLoading: false,
           }));
+          Keyboard.dismiss();
           Util.showMessage('Notes saved successfully', 'success');
         },
       }),
@@ -474,6 +491,50 @@ const Profile = ({navigation, route}) => {
       .catch(err => console.error('Error opening dialer:', err));
   };
 
+  const handleLogOut = async () => {
+    setState(prev => ({...prev, logoutModal: false}));
+
+    // Dispatch token removal action
+    dispatch({
+      type: loginAccesToken.type,
+      payload: {
+        token: false,
+      },
+    });
+
+    // Clear all AsyncStorage except LOGIN_USER
+    const keysToKeep = [LocalStoragekey.LOGIN_USER]; // Keep LOGIN_USER
+    const allKeys = await AsyncStorage.getAllKeys();
+    const keysToRemove = allKeys.filter(key => !keysToKeep.includes(key));
+    console.log('🚀 ~ handleLogOut ~ keysToRemove:', keysToRemove);
+
+    await AsyncStorage.multiRemove(keysToRemove);
+
+    dispatch({
+      type: LOGOUT_API.type,
+    });
+
+    navigation.reset({
+      index: 0,
+      routes: [{name: 'Login'}],
+    });
+    datahandler.setisNewProject(null);
+    // Close the drawer and reset navigation again
+    return;
+    navigation.closeDrawer();
+    navigation.reset({
+      index: 0,
+      routes: [{name: 'Login'}],
+    });
+  };
+
+  const toggleNumberOfLines = index => {
+    setNumOfLinesMap(prev => ({
+      ...prev,
+      [index]: prev[index] === 2 ? 1 : 2,
+    }));
+  };
+
   const renderItem = ({item, index}) => (
     <View style={!statedata.showProfile && {opacity: 0.5}} key={index}>
       <TouchableOpacity
@@ -601,19 +662,9 @@ const Profile = ({navigation, route}) => {
 
       {statedata.expandedIndex === index && index == 1 && (
         <View style={[styles.submenuContainer]}>
-          {item.subItems.map(val => {
+          {item.subItems.map((val, subIndex) => {
             return (
-              <TouchableOpacity
-                onPress={() =>
-                  NavigationService.navigate(StackNav.WebViewScreen, {
-                    title: val.title,
-                    url: val.photo,
-                    id: val.id,
-                    key: val.key,
-                    type: val.isVideo ? 'video' : 'photo',
-                  })
-                }
-                activeOpacity={0.5}
+              <View
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -624,48 +675,75 @@ const Profile = ({navigation, route}) => {
                   borderRadius: ms(14),
                   marginBottom: ms(10),
                 }}>
-                <ScaleText
-                  TextStyle={{textTransform: 'capitalize', width: ms(180)}}
-                  fontSize={ms(14)}
-                  fontFamily={Fonts.type.Bold}
-                  text={val.title}
-                  numberOfLines={1}
-                />
-                {val.isVideo ? (
-                  <View
-                    style={{
-                      marginRight: ms(10),
-                    }}>
-                    <ButtonView
-                      onPress={() => {
-                        setStateData(prev => ({
-                          ...prev,
-                          setVideoUrl: val.photo,
-                        }));
-                      }}>
-                      <VectorIcon
-                        color={Colors.DarkYellow}
-                        size={ms(40)}
-                        name={'video-collection'}
-                        type={'MaterialIcons'}
-                      />
-                    </ButtonView>
-                  </View>
-                ) : (
-                  <Image
-                    source={{uri: val.photo}}
-                    resizeMode="cover"
-                    style={{
-                      width: ms(60),
-                      height: ms(60),
-                      borderRadius: ms(4),
-                      borderWidth: 2,
-                      borderColor: Colors.more_black[900],
-                      marginBottom: ms(5),
-                    }}
+                  <ScaleText
+                    TextStyle={{textTransform: 'capitalize', width: ms(180)}}
+                    fontSize={ms(13)}
+                    fontFamily={Fonts.type.Mediu}
+                    text={val.title}
+                    numberOfLines={numOfLinesMap[subIndex] || 1}
                   />
-                )}
-              </TouchableOpacity>
+                <TouchableOpacity onPress={() => toggleNumberOfLines(subIndex)}>
+                  <ScaleText fontSize={ms(18)} fontFamily={Fonts.type.Bold} text={numOfLinesMap[subIndex] == 1 ? '+' :'-'} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    NavigationService.navigate(StackNav.WebViewScreen, {
+                      title: val.title,
+                      url: val.photo,
+                      id: val.id,
+                      key: val.key,
+                      type: val.isVideo ? 'video' : 'photo',
+                    });
+                  }}>
+                  {val.isVideo ? (
+                    <View
+                      style={{
+                        marginRight: ms(10),
+                      }}>
+                      <ButtonView
+                        onPress={() => {
+                          setStateData(prev => ({
+                            ...prev,
+                            setVideoUrl: val.photo,
+                          }));
+                        }}>
+                        <VectorIcon
+                          color={Colors.DarkYellow}
+                          size={ms(40)}
+                          name={'video-collection'}
+                          type={'MaterialIcons'}
+                        />
+                      </ButtonView>
+                    </View>
+                  ) : (
+                    <FastImageComponent
+                      uri={val.photo ?? ''}
+                      style={{
+                        width: ms(60),
+                        height: ms(60),
+                        borderRadius: ms(4),
+                        borderWidth: 1,
+                        borderColor: Colors.more_black[900],
+                        marginBottom: ms(5),
+                      }}
+                      resizeMode="cover"
+                      fallbackImage={Images.images.Imagenotfound}
+                    />
+                    // <Image
+                    //   source={{uri: val.photo ?? DummyImage}}
+                    //   resizeMode="cover"
+                    //   style={{
+                    //     width: ms(60),
+                    //     height: ms(60),
+                    //     borderRadius: ms(4),
+                    //     borderWidth: 2,
+                    //     borderColor: Colors.more_black[900],
+                    //     marginBottom: ms(5),
+                    //   }}
+                    // />
+                  )}
+                </TouchableOpacity>
+              </View>
             );
           })}
         </View>
@@ -678,6 +756,15 @@ const Profile = ({navigation, route}) => {
               marginTop: ms(-15),
             }}>
             <TextInput
+              onFocus={() => {
+                flatListRef.current?.scrollToIndex({
+                  index,
+                  animated: true,
+                  viewPosition: 0.1,
+                });
+              }}
+              blurOnSubmit={true}
+              returnKeyType="done"
               value={statedata.userNotes}
               multiline={true}
               textAlignVertical="top"
@@ -715,6 +802,7 @@ const Profile = ({navigation, route}) => {
               </View>
             ) : (
               <ScaleText
+                fontSize={ms(15)}
                 TextStyle={styles.saveButtonStyle}
                 textAlign={'right'}
                 text={'save'}
@@ -731,12 +819,15 @@ const Profile = ({navigation, route}) => {
     <>
       {/* Header */}
       <View style={[styles.header, !statedata.showProfile && {opacity: 0.5}]}>
-        <ButtonView disabled={!statedata.showProfile} onPress={() => {}}>
-          <VectorIcon
-            type="Entypo"
-            name="chevron-left"
-            color={'transparent'}
-            size={ms(25)}
+        <ButtonView
+          disabled={!statedata.showProfile}
+          onPress={() => setState(prev => ({...prev, logoutModal: true}))}>
+          <ImageIcon
+            source={{
+              uri: 'https://cdn-icons-png.flaticon.com/128/7175/7175236.png',
+            }}
+            width={ms(25)}
+            height={ms(25)}
           />
         </ButtonView>
         <ScaleText
@@ -764,7 +855,7 @@ const Profile = ({navigation, route}) => {
           !statedata.showProfile && {opacity: 0.5},
         ]}>
         <View>
-          <Image
+          {/* <Image
             source={{
               uri:
                 statedata.galleryPhoto?.uri ??
@@ -773,6 +864,16 @@ const Profile = ({navigation, route}) => {
             }}
             resizeMode="cover"
             style={styles.profileImage}
+          /> */}
+          <FastImageComponent
+            uri={
+              statedata.galleryPhoto?.uri ??
+              statedata?.userProfileData?.profile ??
+              ''
+            }
+            style={styles.profileImage}
+            resizeMode="cover"
+            fallbackImage={Images.images.dummyprofile}
           />
           {statedata.profileImageLoading && (
             <View
@@ -925,21 +1026,25 @@ const Profile = ({navigation, route}) => {
           isDarkMode ? Colors.more_black[900] : Colors.App_Background
         }
       />
-      <Loader type={'CANDIDATE_PROFILE_API'} />
-      <FlatList
-        data={ProfileDataArray}
-        ListHeaderComponent={renderHeader}
-        renderItem={renderItem}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        keyExtractor={(item, index) => index.toString()}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleGetAPISData}
-          />
-        }
-      />
+      <Background maincontentContainer={{padding: 0}} isDarkMode={isDarkMode}>
+        <Loader type={'CANDIDATE_PROFILE_API'} />
+        <FlatList
+          ref={flatListRef}
+          keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled
+          data={ProfileDataArray}
+          ListHeaderComponent={renderHeader}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+          keyExtractor={(item, index) => index.toString()}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleGetAPISData}
+            />
+          }
+        />
+      </Background>
       <RBSheet
         ref={refRBSheet}
         useNativeDriver={true}
@@ -974,6 +1079,21 @@ const Profile = ({navigation, route}) => {
           handleDeleteResume();
         }}
         content={'are you shure you want to delete this'}
+      />
+      <PopupModal
+        isModalVisible={state.logoutModal}
+        showButtons={true}
+        ButtonTitleOne={'Yes'}
+        ButtonTitleTwo={'No'}
+        ButtonOneLoading={state.logoutLoading}
+        ButtonOnePress={() => handleLogOut()}
+        ButtonTwoPress={() => {
+          setState(prev => ({...prev, logoutModal: false}));
+        }}
+        title={'Logout Confirmation'}
+        description={
+          'Are you sure you want to log out? This will end your current session.'
+        }
       />
       <HandleImagePicker
         modalVisible={statedata.showgalleryModal}
@@ -1138,6 +1258,7 @@ const styles = ScaledSheet.create({
     color: Colors.DarkYellow,
     textTransform: 'uppercase',
     fontFamily: Fonts.type.LightItalic,
+    marginRight: '10@ms',
   },
   button: {
     alignItems: 'center',
@@ -1155,5 +1276,11 @@ const styles = ScaledSheet.create({
   text: {
     color: 'white',
     fontSize: '10@ms',
+  },
+  avoidingView: {
+    flex: 1,
+  },
+  textStyle: {
+    width: '200@ms',
   },
 });

@@ -385,6 +385,12 @@ export const SALARY_FREQYENCY = {
   type: REQUEST_TYPE.POST,
 };
 
+export const DELETE_PERFERABLE = {
+  route: `${API}candidate/preferable-job/delete`,
+  access_token_required: true,
+  type: REQUEST_TYPE.POST,
+};
+
 export const SALARY_CURRENCY = {
   route: `${API}get-salary-currency`,
   access_token_required: true,
@@ -418,5 +424,23 @@ export const API_LOGOUT = {
 export const SEND_NOTIFICATION = {
   route: `${API}send-fcm`,
   access_token_required: false,
+  type: REQUEST_TYPE.POST,
+};
+
+export const CHANGE_PASSWORD = {
+  route: `${API}change-password`,
+  access_token_required: true,
+  type: REQUEST_TYPE.POST,
+};
+
+export const TERMS_AND_CONDITIONS = {
+  route: `${API}terms-and-conditions`,
+  access_token_required: true,
+  type: REQUEST_TYPE.GET,
+};
+
+export const DELETE_PHOTO_VIDEOS = {
+  route: `${API}candidate/user-media/remove`,
+  access_token_required: true,
   type: REQUEST_TYPE.POST,
 };

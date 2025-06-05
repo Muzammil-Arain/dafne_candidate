@@ -1,5 +1,12 @@
 import React, {useLayoutEffect, useState, useRef, useEffect} from 'react';
-import {View, FlatList, Animated, Image, ActivityIndicator} from 'react-native';
+import {
+  View,
+  FlatList,
+  Animated,
+  Image,
+  ActivityIndicator,
+  AppState,
+} from 'react-native';
 import {screenOptions} from '../../naviagtor/config';
 import {Background, ScaleText} from '../../common';
 import {ButtonView, Loader} from '../../components';
@@ -13,27 +20,36 @@ import firestore from '@react-native-firebase/firestore';
 import {getUserData} from '../../ducks/auth';
 import {useDispatch, useSelector} from 'react-redux';
 import {createOrFetchChatroom} from './helper';
-import {FIREBASE_CHAT_KEY} from '../../config/AppConfig';
+import {FIREBASE_CHAT_KEY, NOTIFICATION_KEYS} from '../../config/AppConfig';
 import {
   CREATE_CHATROOM_API,
+  GET_INVITATIONS_API,
   INTERVIEW_ACCEPT_API,
   INTERVIEW_DECLINE_API,
   INTERVIEW_HISTORY_API,
 } from '../../ducks/app';
 import {useIsFocused} from '@react-navigation/native';
 import {TouchableOpacity} from 'react-native';
+import {handleSendNotification} from '../../utils/Notification';
+import {
+  onNotification,
+  removeNotificationListener,
+} from '../../utils/NotificationListner';
 
 const isDarkMode = datahandler.getAppTheme();
 const Invitations = 'Invitations';
 const History = 'History';
 
 const Interview = ({navigation, route}) => {
-  const InterViewData = route?.params?.data;
+  // const InterViewData = route?.params?.data;
   const Projectid = route?.params?.id;
+  const appState = useRef(AppState.currentState);
+
   const isfoucsed = useIsFocused();
   const loginData = useSelector(getUserData);
   const dispatch = useDispatch();
   const [chatroomid, setChatRoomid] = useState(null);
+  const [InterViewData, setInterViewData] = useState([]);
   const [historydata, setHistoryData] = useState([]);
   const [isloading, setIsLoading] = useState(false);
   const [fullscreenloading, setFullScreenLoading] = useState(true);
@@ -51,6 +67,23 @@ const Interview = ({navigation, route}) => {
       useNativeDriver: true,
     }).start();
   }, [navigation, statedata.intersted]);
+
+  useEffect(() => {
+    handleGetData();
+  }, []);
+
+  const handleGetData = () => {
+    const formData = new FormData();
+    formData.append('candidate_preferable_industry_id', Projectid);
+    dispatch(
+      GET_INVITATIONS_API.request({
+        payloadApi: formData,
+        cb: res => {
+          setInterViewData(res?.invitations?.reverse());
+        },
+      }),
+    );
+  };
 
   useLayoutEffect(() => {
     navigation.setOptions(
@@ -82,8 +115,14 @@ const Interview = ({navigation, route}) => {
       dispatch(
         INTERVIEW_ACCEPT_API.request({
           payloadApi: formData,
-          cb: data => {
+          cb: async data => {
             setFullScreenLoading(false);
+            await handleSendNotification(
+              dispatch,
+              InterViewData?.client?.id,
+              'Good News!',
+              `You Have a New Interested Candidate`,
+            );
             NavigationService.navigate(StackNav.Projects);
           },
         }),
@@ -109,6 +148,38 @@ const Interview = ({navigation, route}) => {
       }),
     );
   };
+
+  useEffect(() => {
+    const handleNotification = async remoteMessage => {
+      if (
+        remoteMessage?.notification?.title ==
+        NOTIFICATION_KEYS.Interviewscheduled
+      ) {
+        await getHistroyApiData();
+      }
+    };
+    onNotification(handleNotification);
+
+    const subscription = AppState.addEventListener(
+      'change',
+      async nextAppState => {
+        if (
+          appState.current.match(/inactive|background/) &&
+          nextAppState === 'active'
+        ) {
+          console.log('📲 App resumed from background');
+          await getHistroyApiData();
+        }
+
+        appState.current = nextAppState;
+      },
+    );
+
+    return () => {
+      removeNotificationListener(handleNotification);
+      subscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     getHistroyApiData();
@@ -143,6 +214,7 @@ const Interview = ({navigation, route}) => {
             const roomId = await createOrFetchChatroom(
               loginData.id,
               userData?.id,
+              val?.project?.name,
             );
             if (!roomId) return;
 
@@ -155,6 +227,7 @@ const Interview = ({navigation, route}) => {
             NavigationService.navigate(StackNav.GiftChat, {
               data: userData,
               chatroom_id: roomId,
+              projectName: val?.project?.name,
             });
             const unsubscribe = messagesRef.onSnapshot(snapshot => {
               // Real-time listener for messages (add logic here if needed)
@@ -274,7 +347,13 @@ const Interview = ({navigation, route}) => {
                 <View style={styles.interestedContainer}>
                   <ButtonView
                     onPress={() =>
-                      handleInterestChange(interviewId, 'interested', value)
+                      // handleInterestChange(interviewId, 'interested', value)
+                      NavigationService.navigate(
+                        StackNav.InterviewInvitations,
+                        {
+                          data: value,
+                        },
+                      )
                     }
                     style={[
                       styles.buttonStyle,
@@ -427,16 +506,16 @@ const Interview = ({navigation, route}) => {
                     marginTop: ms(30),
                   }}>
                   <TouchableOpacity
-                    onPress={() => {
-                      if (val.interview.status == 'detail_send') {
-                        NavigationService.navigate(
-                          StackNav.InterviewInvitations,
-                          {
-                            data: val,
-                          },
-                        );
-                      }
-                    }}
+                    // onPress={() => {
+                    //   if (val.interview.status == 'detail_send') {
+                    //     NavigationService.navigate(
+                    //       StackNav.InterviewInvitations,
+                    //       {
+                    //         data: val,
+                    //       },
+                    //     );
+                    //   }
+                    // }}
                     // disabled={
                     //   val.interview.status !== 'detail_send' ? true : false
                     // }
@@ -454,7 +533,7 @@ const Interview = ({navigation, route}) => {
                       text={
                         {
                           invite_rejected: 'Not Interested',
-                          invite_accepted: 'Waiting for schedule',
+                          invite_accepted: 'Invite Accepted',
                           interview_scheduled: 'Scheduled',
                         }[val.interview.status] || 'Schedule'
                       }
@@ -499,6 +578,7 @@ const Interview = ({navigation, route}) => {
   return (
     <Background isDarkMode={isDarkMode}>
       {/* Toggle Button Row */}
+      <Loader type={'GET_INVITATIONS'} />
       <View style={styles.toggleContainer}>
         <ToggleButton
           label={Invitations}

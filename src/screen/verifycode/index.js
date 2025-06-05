@@ -51,6 +51,7 @@ const VerifyOtp = ({navigation, route}) => {
     isLoading: false,
     resandLoading: false,
   });
+  console.log("🚀 ~ VerifyOtp ~ statedata:", statedata)
 
   const handleVerifyCode = async () => {
     setStateData(prv => ({...prv, isLoading: true}));
@@ -66,7 +67,7 @@ const VerifyOtp = ({navigation, route}) => {
             Util.showMessage('OTP verified successfully', 'success');
             NavigationService.navigate(StackNav.Login);
           },
-          cberr: res => {
+          cbErr: res => {
             setStateData(prv => ({...prv, isLoading: false}));
           },
         }),
@@ -85,6 +86,9 @@ const VerifyOtp = ({navigation, route}) => {
               responce: res,
               email: email,
             });
+          },
+          cbErr: error => {
+            setStateData(prv => ({...prv, isLoading: false}));
           },
         }),
       );

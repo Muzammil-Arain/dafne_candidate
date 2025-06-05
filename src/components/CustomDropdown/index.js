@@ -18,6 +18,7 @@ const CustomDropdown = ({
   error,
   maximumDate,
   isDarkMode,
+  keyboardType,
   minimumDate,
 }) => {
   const [modal, setModal] = useState(false);
@@ -46,6 +47,7 @@ const CustomDropdown = ({
           setModal(true);
         }}>
         <TextInput
+          keyboardType={keyboardType}
           label={label}
           value={value === '' ? 'Select' : value}
           editable={false}

@@ -41,5 +41,9 @@ export const StackNav = {
   CreateProjectDetails: 'CreateProjectDetails',
   GiftChat: 'GiftChat',
   WebViewScreen:'WebViewScreen',
-  MyBackground:'MyBackground'
+  MyBackground:'MyBackground',
+  Setting:'Setting',
+  ChangePassword:'ChangePassword',
+  ProjectNotifications:'ProjectNotifications',
+  TermsandConditionScreen:'TermsandConditionScreen'
 };
