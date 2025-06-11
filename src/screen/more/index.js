@@ -19,7 +19,7 @@ const options = [
   {text: 'Telentoneed Assistance', icon: Images.icon.more_icon},
   {text: 'Terms and Conditions', icon: Images.icon.more_icon},
   {text: 'Setting', icon: Images.icon.more_icon},
-  {text: 'Bill Payments', icon: Images.icon.more_icon},
+  // {text: 'Bill Payments', icon: Images.icon.more_icon},
   // { text: 'Logout', icon: Images.icon.more_icon },
 ];
 

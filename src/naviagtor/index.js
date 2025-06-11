@@ -130,7 +130,7 @@ function StackScreens(loginUser) {
       <Stack.Screen
         name={StackNav.Profile}
         component={StackRoute.Profile}
-        options={{headerShown: false, gestureEnabled: false}}
+       options={{headerShown: true, gestureEnabled: false}}
       />
       <Stack.Screen
         name={StackNav.Projects}

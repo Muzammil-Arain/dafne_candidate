@@ -89,6 +89,7 @@ const Profile = ({navigation, route}) => {
   const focused = useIsFocused();
   const refRBSheet = useRef();
   const [numOfLinesMap, setNumOfLinesMap] = useState({});
+  console.log("🚀 ~ Profile ~ numOfLinesMap:", numOfLinesMap)
   const [refreshing, setRefreshing] = useState(false);
   const [statedata, setStateData] = useState({
     expandedIndex: null,
@@ -663,6 +664,10 @@ const Profile = ({navigation, route}) => {
       {statedata.expandedIndex === index && index == 1 && (
         <View style={[styles.submenuContainer]}>
           {item.subItems.map((val, subIndex) => {
+            console.log(
+              '🚀 ~ Profile ~ numOfLinesMap:',
+              numOfLinesMap[subIndex],
+            );
             return (
               <View
                 style={{
@@ -675,15 +680,19 @@ const Profile = ({navigation, route}) => {
                   borderRadius: ms(14),
                   marginBottom: ms(10),
                 }}>
-                  <ScaleText
-                    TextStyle={{textTransform: 'capitalize', width: ms(180)}}
-                    fontSize={ms(13)}
-                    fontFamily={Fonts.type.Mediu}
-                    text={val.title}
-                    numberOfLines={numOfLinesMap[subIndex] || 1}
-                  />
+                <ScaleText
+                  TextStyle={{textTransform: 'capitalize', width: ms(180)}}
+                  fontSize={ms(13)}
+                  fontFamily={Fonts.type.Mediu}
+                  text={val.title}
+                  numberOfLines={numOfLinesMap[subIndex] || 1}
+                />
                 <TouchableOpacity onPress={() => toggleNumberOfLines(subIndex)}>
-                  <ScaleText fontSize={ms(18)} fontFamily={Fonts.type.Bold} text={numOfLinesMap[subIndex] == 1 ? '+' :'-'} />
+                  <ScaleText
+                    fontSize={ms(18)}
+                    fontFamily={Fonts.type.Bold}
+                    text={numOfLinesMap[subIndex] == 1 ? '+' : '-'}
+                  />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {

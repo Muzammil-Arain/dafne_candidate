@@ -50,7 +50,10 @@ const What = ({navigation, route}) => {
     frequencyvalue: null,
     currencyvalue: null,
   });
-  console.log("🚀 ~ What ~What ~ statedata statedata:", statedata?.currencyvalue)
+  console.log(
+    '🚀 ~ What ~What ~ statedata statedata:',
+    statedata?.currencyvalue,
+  );
 
   const [jobsData, setJobsData] = useState(null);
   console.log('🚀 ~ What ~ jobsData:', jobsData);
@@ -87,7 +90,10 @@ const What = ({navigation, route}) => {
           params: perID,
           cb: async res => {
             if (res?.data?.employee_type) {
-              console.log('🚀 ~ getNotificationData ~ res?.data:', res?.data?.salary_between);
+              console.log(
+                '🚀 ~ getNotificationData ~ res?.data:',
+                res?.data?.salary_between,
+              );
               setJobsData(res?.data);
               setStateData(prev => ({
                 ...prev,
@@ -113,8 +119,8 @@ const What = ({navigation, route}) => {
                 currencyvalue: {
                   id: res?.data?.salary_currency_id,
                   name: res?.data?.salary_currency,
-                  code:res?.data?.salary_currency_code,
-                  symbol:res?.data?.salary_currency_symbol
+                  code: res?.data?.salary_currency_code,
+                  symbol: res?.data?.salary_currency_symbol,
                 },
                 isBackgound:
                   res?.data?.offer_from_other_industries == 1 ? true : false,
@@ -123,8 +129,14 @@ const What = ({navigation, route}) => {
                     ? true
                     : false,
               }));
-              formObj.setValue('between',res?.data?.salary_between > 0 && res?.data?.salary_between);
-              formObj.setValue('and',res?.data?.salary_and > 0 &&  res?.data?.salary_and);
+              formObj.setValue(
+                'between',
+                res?.data?.salary_between > 0 && res?.data?.salary_between,
+              );
+              formObj.setValue(
+                'and',
+                res?.data?.salary_and > 0 && res?.data?.salary_and,
+              );
               formObj.setValue(
                 'negotiable',
                 res?.data?.salary_negotiable == 1 ? true : false,
@@ -344,7 +356,14 @@ const What = ({navigation, route}) => {
             label={label}
             data={Apidata || []}
             selectedValue={value =>
-              setStateData(prev => ({...prev, [key]: value}))
+              setStateData(prev => ({
+                ...prev,
+                [key]: value,
+                errors: {
+                  ...prev.errors,
+                  [key]: null,
+                },
+              }))
             }
           />
           {statedata.errors?.[key] && (
@@ -506,7 +525,11 @@ const What = ({navigation, route}) => {
             isDarkMode={isDarkMode}
             mainContainerStyle={styles.cuntomStyle}
             label="Currency"
-            value={statedata?.currencyvalue?.name ? `${statedata?.currencyvalue?.code}-${statedata?.currencyvalue?.symbol}` : null}
+            value={
+              statedata?.currencyvalue?.name
+                ? `${statedata?.currencyvalue?.code}-${statedata?.currencyvalue?.symbol}`
+                : null
+            }
             selectedValue={value => {
               setStateData(prev => ({
                 ...prev,

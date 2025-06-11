@@ -30,14 +30,13 @@ const isDarkMode = datahandler.getAppTheme();
 const Where = ({navigation, route}) => {
   const dispatch = useDispatch();
   const {perID, jobsData} = route?.params ?? '';
-  console.log('🚀 ~ Where ~ jobsData:', jobsData?.Availablity_to_start);
   const isfoucsed = useIsFocused();
 
   const [statedata, setStateData] = useState({
     isBackgound: true,
     getState: [],
   });
-  console.log("🚀 ~ Where ~ statedata:", statedata)
+  console.log('🚀 ~ Where ~ statedata:', jobsData?.Availablity_to_start);
 
   const [formData, setFormData] = useState({
     location: '',
@@ -50,7 +49,7 @@ const Where = ({navigation, route}) => {
       startDate: '',
     },
   });
-  console.log("🚀 ~ Where ~formData.startDate formData:", formData.startDate)
+  console.log('🚀 ~ Where ~formData.startDate formData:', formData.startDate);
 
   useLayoutEffect(() => {
     navigation.setOptions(
@@ -75,9 +74,11 @@ const Where = ({navigation, route}) => {
         name: jobsData?.current_location,
         id: jobsData?.current_location_id,
       },
-      startDate: moment(jobsData?.Availablity_to_start, 'MM-DD-YYYY').format(
-        dateFormet,
-      ),
+      startDate: jobsData?.Availablity_to_start
+        ? jobsData?.Availablity_to_start
+        : moment().format(
+            dateFormet,
+          ),
       relocate: jobsData?.willing_to_relocate == 1 ? true : false,
     }));
   }, [navigation, isfoucsed]);
@@ -111,18 +112,20 @@ const Where = ({navigation, route}) => {
     if (!validateForm()) return;
 
     const payload = new FormData();
-    console.log('🚀 ~ onSubmit ~ payload:', payload);
     payload.append('preferable_industry_id', perID ?? '1');
     payload.append('location_for_job', formData.location.id);
     formData.currentLocation.id &&
       payload.append('current_location', formData.currentLocation.id);
     payload.append(
       'Availablity_to_start',
-      jobsData?.Availablity_to_start ??
-        moment(formData.startDate).format('MMM Do YY'),
+      !jobsData?.Availablity_to_start ||
+        jobsData?.Availablity_to_start === 'Invalid date'
+        ? moment(formData.startDate).format('MMM Do YY')
+        : jobsData?.Availablity_to_start,
     );
 
     payload.append('willing_to_relocate', statedata.isBackgound ? 1 : 0);
+    console.log('🚀 ~ onSubmit ~ payload:', payload);
     dispatch(
       PREFERABLE_LOCATION_API.request({
         payloadApi: payload,
@@ -191,7 +194,7 @@ const Where = ({navigation, route}) => {
         />
         <View style={styles.buttonGroup}>
           <ButtonView
-            onPress={() =>  setStateData(prev => ({...prev, isBackgound: true}))}
+            onPress={() => setStateData(prev => ({...prev, isBackgound: true}))}
             style={[
               styles.button,
               {
@@ -207,7 +210,9 @@ const Where = ({navigation, route}) => {
             />
           </ButtonView>
           <ButtonView
-            onPress={() => setStateData(prev => ({...prev, isBackgound: false}))}
+            onPress={() =>
+              setStateData(prev => ({...prev, isBackgound: false}))
+            }
             style={[
               styles.button,
               {
@@ -271,9 +276,10 @@ const Where = ({navigation, route}) => {
         minimumDate={new Date()}
         isDarkMode={isDarkMode}
         value={
-          jobsData?.Availablity_to_start ?
-          moment(formData.startDate).format(dateFormet):
-          moment().format(dateFormet)
+          !jobsData?.Availablity_to_start ||
+          jobsData?.Availablity_to_start === 'Invalid date'
+            ? moment(formData.startDate).format(dateFormet)
+            : jobsData?.Availablity_to_start
         }
         label="Availability to start work?"
         data={dummyDropdownData}
