@@ -255,11 +255,11 @@ const Projects = ({navigation}) => {
                   id: item.id,
                 })
               }>
-              <Image
+              {/* <Image
                 source={Images.icon.poistion_bell}
                 resizeMode="contain"
                 style={styles.projectItemImage}
-              />
+              /> */}
             </TouchableOpacity>
           )}
         </View>
