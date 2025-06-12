@@ -41,7 +41,7 @@ function* watchLogin() {
     } catch (error) {
       cberr?.(error);
       yield put(LOGIN_API.failure({ errorMessage: error.message }));
-      Util.showMessage(error.message);
+      // Util.showMessage(error.message);
     }
   }
 }

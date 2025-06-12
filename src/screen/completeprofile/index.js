@@ -8,7 +8,9 @@ import {StackNav} from '../../naviagtor/stackkeys';
 import {ButtonView} from '../../components';
 import {ms} from 'react-native-size-matters';
 import datahandler from '../../helper/datahandler';
-import { styles } from './styles';
+import {styles} from './styles';
+import {PROFILE_PERCENTAGE_API} from '../../ducks/app';
+import {useDispatch} from 'react-redux';
 
 const isDarkMode = datahandler.getAppTheme();
 
@@ -16,6 +18,7 @@ const DummyText =
   'It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letter';
 
 const CompleteProfile = ({navigation, route}) => {
+  const dispatch = useDispatch();
   const TotalProfileValue = route?.params?.value || '';
 
   useLayoutEffect(() => {
@@ -35,6 +38,22 @@ const CompleteProfile = ({navigation, route}) => {
       ),
     );
   }, [navigation, isDarkMode, TotalProfileValue]);
+
+  const handlesavelater = () => {
+    const formData = new FormData();
+    formData.append('percentage', 'AppStack');
+
+    dispatch(
+      PROFILE_PERCENTAGE_API.request({
+        payloadApi: formData,
+        cb: res => {
+          NavigationService.navigate('AppStack', {
+            key: true,
+          });
+        },
+      }),
+    );
+  };
 
   return (
     <Background isDarkMode={isDarkMode}>
@@ -125,6 +144,8 @@ const CompleteProfile = ({navigation, route}) => {
         ]}>
         {TotalProfileValue !== '100%' && (
           <AppButton
+            type={'PROFILE_PERCENTAGE'}
+            onPress={() => handlesavelater()}
             imagesource={Images.icon.bookmark}
             BackgroundColor={Colors.Black_02}
             containerStyle={styles.saveButton}

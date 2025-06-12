@@ -24,7 +24,8 @@ const WebViewScreen = ({navigation, route}) => {
   const dispatch = useDispatch();
   const isDarkMode = datahandler.getAppTheme();
   const {url, title = '', type = '', id, key} = route.params || {};
-  const [mediaUri, setMediaUri] = useState(url ?? DummyImage);
+  const [mediaUri, setMediaUri] = useState(url);
+  console.log("🚀 ~ WebViewScreen ~ mediaUri:", mediaUri)
   const [showImageModal, setShowImageModal] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -113,29 +114,37 @@ const WebViewScreen = ({navigation, route}) => {
                 uri={mediaUri ?? ''}
                 style={styles.coverImage}
                 resizeMode="cover"
-                fallbackImage={Images.images.dummyprofile}
+                fallbackImage={Images.images.Imagenotfound}
               />
             </ButtonView>
           )}
-
-          {isVideo && (
-            <MoVideoPlayer
-              autoPlay
-              source={{uri: mediaUri}}
-              style={styles.coverVideo}
-            />
-          )}
+          {isVideo ? (
+            mediaUri ? (
+              <MoVideoPlayer
+                autoPlay
+                source={{uri: mediaUri}}
+                style={styles.coverVideo}
+              />
+            ) : (
+              <FastImageComponent
+                uri={mediaUri ?? ''}
+                style={styles.coverImage}
+                resizeMode="cover"
+                fallbackImage={Images.images.videonotfound}
+              />
+            )
+          ) : null}
 
           <View style={styles.buttonContainer}>
-            <AppButton
+            {mediaUri &&<AppButton
               ShowLinear={false}
               isloading={deleteapiloading}
               title="Delete"
               onPress={() => handleDete()}
-            />
+            />}
             <AppButton
               isloading={apiloading}
-              title="Update"
+              title={mediaUri ? "Update" : 'Upload'}
               onPress={() => setShowGalleryModal(true)}
             />
           </View>

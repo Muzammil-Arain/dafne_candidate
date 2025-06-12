@@ -11,7 +11,7 @@ import {
   CustomDropdown,
   TextInputCustom,
 } from '../../components';
-import {Colors} from '../../theme';
+import {Colors, Fonts} from '../../theme';
 import {StackNav} from '../../naviagtor/stackkeys';
 import datahandler from '../../helper/datahandler';
 import {NavigationService, Util} from '../../utils';
@@ -24,6 +24,7 @@ import {styles} from './styles';
 import {
   changeSteps,
   dateFormet,
+  getoptionsdata,
   progressSteps,
   progressTextSteps,
   steps,
@@ -46,6 +47,8 @@ import {
   GET_CERTIFICATE_API,
   GET_DEGREE_API,
   PROFILE_PERCENTAGE_API,
+  GET_STATE_API,
+  API_GET_CITY_API,
 } from '../../ducks/app';
 import {useDispatch} from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -72,6 +75,11 @@ const AuthProfile = ({navigation}) => {
         location: '',
         startDate: '',
         endDate: '',
+        flightTime: '',
+        turbineTime: '',
+        pictime: '',
+        sictime: '',
+        typerate: '',
         currently_working: null,
       },
     ],
@@ -209,6 +217,14 @@ const AuthProfile = ({navigation}) => {
         startDate: item?.startDate || '',
         endDate: item?.endDate || '',
         still_working: item?.currently_working == 1,
+
+        flightTime: item?.flight_time,
+        turbineTime: item?.turbin_time,
+        pictime: item?.pic_time,
+        sictime: item?.sic_time,
+        typerate: {
+          name: item?.require_type_rating,
+        },
       }));
 
       const filledEducation = parsedEducation?.map(item => {
@@ -260,17 +276,18 @@ const AuthProfile = ({navigation}) => {
 
       setStateData(prev => ({
         ...prev,
-        currentStep: filledSkill.length !== 0
-          ? 5
-          : filledLanguage.length !== 0
-          ? 4
-          : filledVisa.length !== 0
-          ? 3
-          : filledEducation.length !== 0
-          ? 2
-          : filledExperiences.length !== 0
-          ? 1
-          : 0,
+        currentStep:
+          filledSkill.length !== 0
+            ? 5
+            : filledLanguage.length !== 0
+            ? 4
+            : filledVisa.length !== 0
+            ? 3
+            : filledEducation.length !== 0
+            ? 2
+            : filledExperiences.length !== 0
+            ? 1
+            : 0,
         Experience:
           filledExperiences.length == 0
             ? [
@@ -283,6 +300,11 @@ const AuthProfile = ({navigation}) => {
                   startDate: '',
                   endDate: '',
                   currently_working: null,
+                  flightTime: '',
+                  turbineTime: '',
+                  pictime: '',
+                  sictime: '',
+                  typerate: '',
                 },
               ]
             : filledExperiences,
@@ -389,6 +411,10 @@ const AuthProfile = ({navigation}) => {
           action: GET_CERTIFICATE_API,
           key: 'getCertificate',
         },
+        {
+          action: GET_COUNTRIES_API,
+          key: 'getcountries',
+        },
       ],
     ];
 
@@ -492,6 +518,7 @@ const AuthProfile = ({navigation}) => {
 
   const handleAddExperienceApi = async id => {
     const {Experience} = statedata;
+    console.log('🚀 ~ AuthProfile ~ Experience:', Experience);
 
     if (!Experience || Experience.length === 0) {
       console.warn('No experience data found');
@@ -520,6 +547,13 @@ const AuthProfile = ({navigation}) => {
       start_date: Experience.map(exp => exp.startDate),
       end_date: Experience.map(exp => exp.endDate || ''),
       still_working: Experience.map(exp => (exp.still_working ? '1' : '0')),
+
+      //optional
+      flight_time: Experience.map(exp => exp.flightTime),
+      turbin_time: Experience.map(exp => exp.turbineTime),
+      pic_time: Experience.map(exp => exp.pictime),
+      sic_time: Experience.map(exp => exp.sictime),
+      require_type_rating: Experience.map(exp => exp.typerate?.name),
     };
 
     setStateData(prev => ({...prev, isLoading: 'WORK_EXPERIENCE'}));
@@ -654,7 +688,23 @@ const AuthProfile = ({navigation}) => {
   const handleAddLicenseApi = async id => {
     const {License, Certificate} = statedata;
 
-    if (!License || License.length === 0) {
+    if (!License?.[0]?.issue_country == '' || License[0].license == '') {
+      const formData = new FormData();
+      formData.append('percentage', 'CompleteProfile');
+      dispatch(
+        PROFILE_PERCENTAGE_API.request({
+          payloadApi: formData,
+          cb: res => {
+            // Util.showMessage(
+            //   'License and Certificate added successfully',
+            //   'success',
+            // );
+            NavigationService.push(StackNav.CompleteProfile, {
+              value: '60%',
+            });
+          },
+        }),
+      );
       console.warn('No License and Certificate data found');
       return;
     }
@@ -693,41 +743,33 @@ const AuthProfile = ({navigation}) => {
     );
   };
 
+  // const handleGetStates = async value => {
+  //   console.log('====================================');
+  //   console.log(value, 'valuevaluevaluevalue');
+  //   console.log('====================================');
+  //   dispatch(
+  //     GET_STATE_API.request({
+  //       payloadApi: {},
+  //       params: value?.id,
+  //       cb: data => {
+  //         const dropdowndata = data;
+  //         const sorted = [...dropdowndata].sort((a, b) =>
+  //           a.name.localeCompare(b.name),
+  //         );
+
+  //         setStateData(prev => ({...prev, getstatedata: sorted}));
+  //       },
+  //     }),
+  //   );
+  // };
+
   const experiencesetup = index => {
     const renderExperienceSection = (experience, expIndex) => {
+      console.log('🚀 ~ renderExperienceSection ~ experience:', experience);
       const isSelected = statedata.selectedExpId === expIndex;
       return (
         <View key={expIndex}>
           <View style={{width: ms(275)}}>
-            {/* <ButtonView
-                onPress={() => {
-                  let index = expIndex;
-                  if (statedata.selectedExpId == expIndex) {
-                    setStateData(prev => ({
-                      ...prev,
-                      selectedExpId: null,
-                    }));
-                  } else {
-                    setStateData(prev => ({
-                      ...prev,
-                      selectedExpId: index,
-                    }));
-                  }
-                }}>
-                <View style={styles.experienceButton}>
-                  <ScaleText
-                    isDarkMode={isDarkMode}
-                    fontSize={ms(15)}
-                    // text={`Experience No ${expIndex + 1}`}
-                  />
-                  <VectorIcon
-                    type="FontAwesome"
-                    name="chevron-up"
-                    size={ms(14)}
-                    color={isDarkMode ? Colors.Whiite_B8 : Colors.Black_55}
-                  />
-                </View>
-              </ButtonView> */}
             {statedata.Experience.length > 1 && (
               <ButtonView onPress={() => handleRemoveExperience(expIndex)}>
                 <ScaleText
@@ -743,7 +785,7 @@ const AuthProfile = ({navigation}) => {
               <CustomDropdown
                 isDarkMode={isDarkMode}
                 value={experience.industry.name}
-                label="Select Industry"
+                label="Industry"
                 selectedValue={value =>
                   handleFieldChange(expIndex, 'industry', value)
                 }
@@ -778,7 +820,7 @@ const AuthProfile = ({navigation}) => {
               optional={true}
               isDarkMode={isDarkMode}
               placeholder="Enter Company Name"
-              label="Company Name"
+              label="Enter Company Name"
               value={experience.companyName}
               onChangeText={text =>
                 setStateData(prev => {
@@ -788,6 +830,30 @@ const AuthProfile = ({navigation}) => {
                 })
               }
             />
+
+            {/* <CustomDropdown
+              isDarkMode={isDarkMode}
+              value={experience?.country?.name}
+              label="Enter Country Name"
+              selectedValue={value => {
+                handleGetStates(value);
+                handleFieldChange(expIndex, 'country', value);
+              }}
+              data={statedata.getCountry}
+            /> */}
+
+            {statedata?.getstatedata && (
+              <CustomDropdown
+                isDarkMode={isDarkMode}
+                value={experience?.state?.name}
+                label="Enter State Name"
+                selectedValue={value => {
+                  handleGetStates(value);
+                  handleFieldChange(expIndex, 'State', value);
+                }}
+                data={statedata.getstatedata}
+              />
+            )}
 
             <TextInputCustom
               optional={true}
@@ -803,6 +869,7 @@ const AuthProfile = ({navigation}) => {
                 })
               }
             />
+
             <View style={styles.row}>
               <CustomDropdown
                 isDarkMode={isDarkMode}
@@ -856,15 +923,143 @@ const AuthProfile = ({navigation}) => {
               </View>
             )}
           </View>
+          {experience.jobTitle.name == 'PILOT' && (
+            <View style={{}}>
+              <View
+                style={{
+                  backgroundColor: Colors.Black,
+                  height: ms(40),
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginVertical: ms(10),
+                }}>
+                <ScaleText
+                  color={Colors.White}
+                  fontSize={Fonts.size.size_17}
+                  textAlign={'center'}
+                  text={'Flight Time Experience'}
+                />
+              </View>
+              <View style={styles.row}>
+                <TextInputCustom
+                  cuntomStyle={{width: ms(135)}}
+                  optional={true}
+                  isDarkMode={isDarkMode}
+                  placeholder="Total flight time"
+                  label="Total flight time"
+                  value={experience.flightTime}
+                  onChangeText={text =>
+                    setStateData(prev => {
+                      const updatedExperience = [...prev.Experience];
+                      updatedExperience[expIndex].flightTime = text;
+                      return {...prev, Experience: updatedExperience};
+                    })
+                  }
+                />
+                <TextInputCustom
+                  cuntomStyle={{width: ms(135)}}
+                  optional={true}
+                  isDarkMode={isDarkMode}
+                  placeholder="Total turbine time"
+                  label="Total turbine time"
+                  value={experience.turbineTime}
+                  onChangeText={text =>
+                    setStateData(prev => {
+                      const updatedExperience = [...prev.Experience];
+                      updatedExperience[expIndex].turbineTime = text;
+                      return {...prev, Experience: updatedExperience};
+                    })
+                  }
+                />
+              </View>
+              <View style={styles.row}>
+                <TextInputCustom
+                  cuntomStyle={{width: ms(135)}}
+                  optional={true}
+                  isDarkMode={isDarkMode}
+                  placeholder="Total PIC time"
+                  label="Total PIC time"
+                  value={experience.pictime}
+                  onChangeText={text =>
+                    setStateData(prev => {
+                      const updatedExperience = [...prev.Experience];
+                      updatedExperience[expIndex].pictime = text;
+                      return {...prev, Experience: updatedExperience};
+                    })
+                  }
+                />
+                <TextInputCustom
+                  cuntomStyle={{width: ms(135)}}
+                  optional={true}
+                  isDarkMode={isDarkMode}
+                  placeholder="Total SIC time"
+                  label="Total SIC time"
+                  value={experience.sictime}
+                  onChangeText={text =>
+                    setStateData(prev => {
+                      const updatedExperience = [...prev.Experience];
+                      updatedExperience[expIndex].sictime = text;
+                      return {...prev, Experience: updatedExperience};
+                    })
+                  }
+                />
+              </View>
+              <CustomDropdown
+                isDarkMode={isDarkMode}
+                value={experience?.typerate?.name}
+                label="Type Rate"
+                selectedValue={value =>
+                  handleFieldChange(expIndex, 'typerate', value)
+                }
+                data={getoptionsdata}
+                // data={statedata.getSkills}
+              />
+            </View>
+          )}
         </View>
       );
     };
 
     const handleAddExperience = index => {
+      // const selectedArray =
+      //   statedata.Experience[index] ?? statedata.Experience[0];
+      // const invalidField = Object.values(selectedArray)?.filter(
+      //   val => typeof val === 'string' && !val.trim(),
+      // );
       const selectedArray =
         statedata.Experience[index] ?? statedata.Experience[0];
-      const invalidField = Object.values(selectedArray)?.filter(
-        val => typeof val === 'string' && !val.trim(),
+      console.log('🚀 ~ AuthProfile ~ selectedArray:', selectedArray);
+
+      const isPilot = selectedArray?.jobTitle?.name === 'PILOT';
+      console.log('🚀 ~ AuthProfile ~ isPilot:', isPilot);
+
+      // Common required fields
+      let requiredFields = [
+        'industry',
+        'employmentType',
+        'jobTitle',
+        'companyName',
+        'location',
+        'startDate',
+        'endDate',
+      ];
+
+      if (isPilot) {
+        requiredFields.push(
+          'flightTime',
+          'turbineTime',
+          'pictime',
+          'sictime',
+          'typerate',
+        );
+      }
+
+      // Now validate the fields
+      const invalidField = requiredFields.filter(
+        key =>
+          selectedArray[key] === '' ||
+          selectedArray[key] === null ||
+          selectedArray[key] === undefined,
       );
 
       if (invalidField.length > 1) {
@@ -884,6 +1079,11 @@ const AuthProfile = ({navigation}) => {
               location: '',
               startDate: '',
               endDate: '',
+              flightTime: '',
+              turbineTime: '',
+              pictime: '',
+              sictime: '',
+              typerate: '',
             },
           ],
           selectedExpId: statedata.Experience.length + 1,
@@ -902,11 +1102,40 @@ const AuthProfile = ({navigation}) => {
     };
 
     if (index === 0) {
-      const selectedArray = statedata.Experience[0];
-      const invalidField = Object.values(selectedArray)?.filter(
-        val => val === '' || val === null || val === undefined,
+      const selectedArray = statedata.Experience?.[0];
+
+      const isPilot = selectedArray?.jobTitle?.name === 'PILOT';
+
+      // Common required fields
+      let requiredFields = [
+        'industry',
+        'employmentType',
+        'jobTitle',
+        'companyName',
+        'location',
+        'startDate',
+      ];
+
+      if (isPilot) {
+        requiredFields.push(
+          'flightTime',
+          'turbineTime',
+          'pictime',
+          'sictime',
+          'typerate',
+        );
+      }
+
+      // Now validate the fields
+      const invalidField = requiredFields.filter(
+        key =>
+          selectedArray[key] === '' ||
+          selectedArray[key] === null ||
+          selectedArray[key] === undefined,
       );
-      const ButtonEnable = invalidField.length > 1;
+
+      const ButtonEnable = invalidField.length > 0;
+
       return (
         <View style={styles.formContainer}>
           <View>{statedata.Experience.map(renderExperienceSection)}</View>
@@ -1272,7 +1501,7 @@ const AuthProfile = ({navigation}) => {
         val => typeof val === 'string' && !val.trim(),
       );
 
-      if (invalidField.length > 0) {
+      if (invalidField.length > 1) {
         Util.showMessage('An invalid field exists.');
         return;
       } else {
@@ -1296,7 +1525,7 @@ const AuthProfile = ({navigation}) => {
         val => typeof val === 'string' && !val.trim(),
       );
 
-      if (invalidField.length > 0) {
+      if (invalidField.length > 1) {
         Util.showMessage('An invalid field exists.');
         return;
       } else {
@@ -1342,7 +1571,7 @@ const AuthProfile = ({navigation}) => {
       const invalidVisaVisaField = Object.values(selectedArray)?.filter(
         val => typeof val === 'string' && !val.trim(),
       );
-      const isButtonDisabled = invalidPassportField.length > 0;
+      const isButtonDisabled = invalidPassportField.length > 1;
 
       return (
         <View style={styles.formContainer}>
@@ -1775,7 +2004,7 @@ const AuthProfile = ({navigation}) => {
           </ButtonView>
           <AppButton
             type={'LICENSE'}
-            disabled={isButtonDisabled}
+            // disabled={isButtonDisabled}
             onPress={() => {
               handleAddLicenseApi();
             }}

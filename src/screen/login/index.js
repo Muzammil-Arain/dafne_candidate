@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Image,
   View,
@@ -12,23 +12,24 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { StackNav } from '../../naviagtor/stackkeys';
-import { Colors, Fonts, Images } from '../../theme';
-import { NavigationService, Util } from '../../utils';
-import { useHookForm, ValidationSchema } from '../../utils/ValidationUtil';
-import { AppCheckBox, ButtonView, TextInputNative } from '../../components';
-import { AppButton, ImageIcon, ScaleText } from '../../common';
-import { ms } from 'react-native-size-matters';
+import {StackNav} from '../../naviagtor/stackkeys';
+import {Colors, Fonts, Images} from '../../theme';
+import {NavigationService, Util} from '../../utils';
+import {useHookForm, ValidationSchema} from '../../utils/ValidationUtil';
+import {AppCheckBox, ButtonView, TextInputNative} from '../../components';
+import {AppButton, ImageIcon, ScaleText} from '../../common';
+import {ms} from 'react-native-size-matters';
 import datahandler from '../../helper/datahandler';
-import { useDispatch } from 'react-redux';
-import { LOGIN_API } from '../../ducks/auth';
+import {useDispatch} from 'react-redux';
+import {LOGIN_API} from '../../ducks/auth';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import { styles } from './styles';
+import {styles} from './styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LocalStoragekey } from '../../config/AppConfig';
-import { RequestUserPermission } from '../../utils/Notification';
-import { useIsFocused } from '@react-navigation/native';
-import { Storage } from '../../utils/storageHelper';
+import {LocalStoragekey} from '../../config/AppConfig';
+import {RequestUserPermission} from '../../utils/Notification';
+import {useIsFocused} from '@react-navigation/native';
+import {Storage} from '../../utils/storageHelper';
+import AccountReviewModal from './popup';
 
 const isDarkMode = datahandler.getAppTheme();
 const screenHeight = Dimensions.get('window').height;
@@ -36,7 +37,7 @@ const screenHeight = Dimensions.get('window').height;
 const USER_PROFILE_PIC =
   'https://med.gov.bz/wp-content/uploads/2020/08/dummy-profile-pic.jpg';
 
-const Login = ({ navigation }) => {
+const Login = ({navigation}) => {
   const [statedata, setStateData] = useState({
     isChecked: false,
     isLoading: false,
@@ -47,6 +48,7 @@ const Login = ({ navigation }) => {
   const dispatch = useDispatch();
   const refRBSheet = useRef();
   const isfocues = useIsFocused();
+  const [modalVisible, setModalVisible] = useState(false);
 
   const calculateHeight = () => {
     const itemHeight = ms(100);
@@ -72,7 +74,7 @@ const Login = ({ navigation }) => {
         setTimeout(() => {
           refRBSheet.current?.open();
         }, 1000);
-        setStateData(prev => ({ ...prev, items: storedUserData?.reverse() }));
+        setStateData(prev => ({...prev, items: storedUserData?.reverse()}));
       }
     } catch (error) {
       console.log('Error reading userData from AsyncStorage:', error);
@@ -88,7 +90,7 @@ const Login = ({ navigation }) => {
 
   const [formObj, emailProps, passwordProps, termProps] = useHookForm(
     ['email', 'password', 'term'],
-    { term: false },
+    {term: false},
     ValidationSchema.logIn,
   );
 
@@ -123,11 +125,11 @@ const Login = ({ navigation }) => {
             });
             return;
           }
-          const { percentage } = res?.data?.user || {};
+          const {percentage} = res?.data?.user || {};
 
           if (!percentage) {
             NavigationService.navigate(StackNav.AuthProfile);
-            setStateData(prev => ({ ...prev, isLoading: false }));
+            setStateData(prev => ({...prev, isLoading: false}));
             return;
           }
 
@@ -138,7 +140,7 @@ const Login = ({ navigation }) => {
 
           if (percentage === 'AppStack') {
             await AsyncStorage.setItem('LOGIN', 'AppStack');
-            NavigationService.navigate('AppStack', { key: true });
+            NavigationService.navigate('AppStack', {key: true});
           } else if (screen) {
             NavigationService.navigate(screen, {
               key: key,
@@ -148,14 +150,21 @@ const Login = ({ navigation }) => {
             NavigationService.navigate(percentage);
           }
 
-          setStateData(prev => ({ ...prev, isLoading: false }));
+          setStateData(prev => ({...prev, isLoading: false}));
+        },
+        cberr: async error => {
+          if (error.message == 'Your account is in review') {
+            setModalVisible(true);
+          } else {
+            Util.showMessage(error?.message);
+          }
         },
       }),
     );
   });
 
   const handleLogin = async item => {
-    setStateData(prev => ({ ...prev, isLoading: true }));
+    setStateData(prev => ({...prev, isLoading: true}));
     let oldfcmToken = await AsyncStorage.getItem(LocalStoragekey.FCM_TOKEN);
     const formData = new FormData();
     formData.append('role', 'candidate');
@@ -167,14 +176,13 @@ const Login = ({ navigation }) => {
       LOGIN_API.request({
         payloadApi: formData,
         cb: async res => {
-          
           refRBSheet.current.close();
-          const { percentage } = res?.data?.user || {};
+          const {percentage} = res?.data?.user || {};
           // NavigationService.navigate(StackNav.AuthVideoUpload);
           // return
           if (!percentage) {
             NavigationService.navigate(StackNav.AuthProfile);
-            setStateData(prev => ({ ...prev, isLoading: false }));
+            setStateData(prev => ({...prev, isLoading: false}));
             return;
           }
 
@@ -185,7 +193,7 @@ const Login = ({ navigation }) => {
 
           if (percentage === 'AppStack') {
             await AsyncStorage.setItem('LOGIN', 'AppStack');
-            NavigationService.navigate('AppStack', { key: true });
+            NavigationService.navigate('AppStack', {key: true});
           } else if (screen) {
             NavigationService.navigate(screen, {
               key: key,
@@ -194,18 +202,18 @@ const Login = ({ navigation }) => {
           } else {
             NavigationService.navigate(percentage);
           }
-          setStateData(prev => ({ ...prev, isLoading: false }));
+          setStateData(prev => ({...prev, isLoading: false}));
         },
-        cberr:async error => {
+        cberr: async error => {
           refRBSheet.current.close();
-          setStateData(prev => ({ ...prev, isLoading: false }));
-        }
+          setStateData(prev => ({...prev, isLoading: false}));
+        },
       }),
     );
   };
 
   const handleSetTheme = async value => {
-    setStateData(prev => ({ ...prev, themeModal: false }));
+    setStateData(prev => ({...prev, themeModal: false}));
     datahandler.setAppTheme(value === 'dark');
     await AsyncStorage.setItem(LocalStoragekey.THEME_COLOUR, value);
   };
@@ -220,11 +228,16 @@ const Login = ({ navigation }) => {
       style={{
         flex: 1,
       }}>
-      <View style={{ flex: 1 }}>
+      <View style={{flex: 1}}>
         <StatusBar
           backgroundColor={
             isDarkMode ? Colors.more_black[800] : Colors.White_F8
           }
+        />
+
+        <AccountReviewModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
         />
 
         <KeyboardAvoidingView
@@ -382,7 +395,7 @@ const Login = ({ navigation }) => {
               backgroundColor: Colors.more_black[600],
             },
           }}>
-          <SafeAreaView style={{ flex: 1 }}>
+          <SafeAreaView style={{flex: 1}}>
             <ScaleText
               isDarkMode={isDarkMode}
               color={Colors.Black_18}
@@ -410,12 +423,12 @@ const Login = ({ navigation }) => {
                 showsVerticalScrollIndicator={false}
                 data={statedata.items}
                 keyExtractor={(item, index) => index.toString()}
-                contentContainerStyle={{ flexGrow: 1 }}
+                contentContainerStyle={{flexGrow: 1}}
                 ListFooterComponentStyle={{
                   justifyContent: 'flex-end',
                   marginTop: 'auto',
                 }}
-                renderItem={({ item }) => {
+                renderItem={({item}) => {
                   return (
                     <TouchableOpacity
                       activeOpacity={0.8}

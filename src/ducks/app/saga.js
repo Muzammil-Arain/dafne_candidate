@@ -63,9 +63,13 @@ import {
   CHANGE_PASSWORD_API,
   DELETE_PHOTO_VIDEOS_API,
   TERMS_AND_CONDITIONS_API,
+  API_GET_CITY_API,
+  PHOTO_LABEL_API,
 } from '.';
 import {
+  API_GET_CITY,
   API_GET_COUNTRIES,
+  API_GET_STATES,
   BEHIND_UNIFORM,
   CANDIDATE_PROFILE,
   CHANGE_PASSWORD,
@@ -103,6 +107,7 @@ import {
   LANGUAGE,
   LICENSE,
   PASSPORT_VISA,
+  PHOTO_LABEL,
   PREFERABLE_INDUSTRY,
   PREFERABLE_LOCATION,
   PROFESSIONAL_PROFILE,
@@ -593,7 +598,7 @@ function* watchGetState() {
     try {
       const response = yield call(
         callRequest,
-        GET_STATE,
+        API_GET_STATES,
         payloadApi,
         {},
         params,
@@ -602,6 +607,26 @@ function* watchGetState() {
       cb?.(response?.data);
     } catch (error) {
       yield put(GET_STATE_API.failure({errorMessage: error.message}));
+    }
+  }
+}
+
+function* watchGetCity() {
+  while (true) {
+    const {payload} = yield take(API_GET_CITY_API.request.type);
+    const {payloadApi, cb, params, headers} = payload;
+    try {
+      const response = yield call(
+        callRequest,
+        API_GET_CITY,
+        payloadApi,
+        {},
+        params,
+      );
+      yield put(API_GET_CITY_API.success({data: response?.data}));
+      cb?.(response?.data);
+    } catch (error) {
+      yield put(API_GET_CITY_API.failure({errorMessage: error.message}));
     }
   }
 }
@@ -1048,8 +1073,50 @@ function* watchtermsandconditions() {
   }
 }
 
+function* watchuploadphotos() {
+  while (true) {
+    const {payload} = yield take(PHOTO_LABEL_API.request.type);
+    const {payloadApi, cb} = payload;
+    try {
+      const response = yield call(
+        callRequest,
+        PHOTO_LABEL,
+        payloadApi,
+      );
+      yield put(PHOTO_LABEL_API.success({data: response}));
+      cb?.(response);
+    } catch (error) {
+      yield put(
+        PHOTO_LABEL_API.failure({errorMessage: error.message}),
+      );
+    }
+  }
+}
+
+
+function* watchuploadvideos() {
+  while (true) {
+    const {payload} = yield take(PHOTO_LABEL_API.request.type);
+    const {payloadApi, cb} = payload;
+    try {
+      const response = yield call(
+        callRequest,
+        PHOTO_LABEL,
+        payloadApi,
+      );
+      yield put(PHOTO_LABEL_API.success({data: response}));
+      cb?.(response);
+    } catch (error) {
+      yield put(
+        PHOTO_LABEL_API.failure({errorMessage: error.message}),
+      );
+    }
+  }
+}
 export default function* root() {
   yield fork(watchUploadmedia);
+  yield fork(watchuploadphotos);
+  yield fork(watchuploadvideos);
   yield fork(watchdeleteLicense);
   yield fork(watchtermsandconditions);
   yield fork(watchdeleteLanguage);
@@ -1108,4 +1175,5 @@ export default function* root() {
   yield fork(watchDeleteJobs);
   yield fork(watchchangePassword);
   yield fork(watchdeltevideos);
+  yield fork(watchGetCity);
 }

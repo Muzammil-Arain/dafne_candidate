@@ -18,7 +18,8 @@ export const GET_INDUSTRY_API = makeRequesActions('GET_INDUSTRY');
 export const GET_EMPLOYMENT_API = makeRequesActions('GET_EMPLOYMENT');
 export const GET_JOB_API = makeRequesActions('GET_JOB');
 export const GET_COUNTRIES_API = makeRequesActions('API_GET_COUNTRIES');
-export const GET_STATE_API = makeRequesActions('API_GET_STATE');
+export const GET_STATE_API = makeRequesActions('API_GET_STATES');
+export const API_GET_CITY_API = makeRequesActions('API_GET_CITY')
 export const GET_EXPERIENCE_API = makeRequesActions('GET_EXPERIENCE');
 export const GET_LANGUAGES_API = makeRequesActions('GET_LANGUAGES');
 export const GET_SKILLS_API = makeRequesActions('GET_SKILLS');
@@ -54,6 +55,10 @@ export const INTERVIEW_DECLINE_API = makeRequesActions('INTERVIEW_DECLINE');
 export const INTERVIEW_ACCEPT_API = makeRequesActions('INTERVIEW_ACCEPT');
 export const SEND_NOTIFICATION_API = makeRequesActions('SEND_NOTIFICATION');
 
+export const PHOTO_LABEL_API = makeRequesActions('PHOTO_LABEL');
+export const VIDEO_LABEL_API = makeRequesActions('VIDEO_LABEL');
+
+
 export const DELETE_WORK_EXPERIENCE_API = makeRequesActions('DELETE_WORK_EXPERIENCE');
 export const DELETE_EDUCATION_API = makeRequesActions('DELETE_EDUCATION');
 export const DELETE_PASSPORT_VISA_API = makeRequesActions('DELETE_PASSPORT_VISA');
@@ -74,6 +79,7 @@ const initalState = {
 export default createReducer(initalState, builder => {
   builder.addCase(LOGOUT_API.success, (state, action) => {});
   builder.addCase(CHANGE_PASSWORD_API.success, (state, action) => {});
+  builder.addCase(API_GET_CITY_API.success, (state, action) => {});
   builder.addCase(TERMS_AND_CONDITIONS_API.success, (state, action) => {});
   builder.addCase(DELETE_PHOTO_VIDEOS_API.success, (state, action) => {});
   builder.addCase(DELETE_PERFERABLE_API.success, (state, action) => {});
@@ -143,5 +149,9 @@ export default createReducer(initalState, builder => {
   builder.addCase(DELETE_LANGUAGE_API.success, (state, action) => {});
   builder.addCase(DELETE_SKILLS_API.success, (state, action) => {});
   builder.addCase(DELETE_LICENSE_API.success, (state, action) => {});
+
+  builder.addCase(PHOTO_LABEL_API.success, (state, action) => {});
+  builder.addCase(VIDEO_LABEL_API.success, (state, action) => {});
+
 
 });

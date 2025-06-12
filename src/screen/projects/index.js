@@ -255,11 +255,11 @@ const Projects = ({navigation}) => {
                   id: item.id,
                 })
               }>
-              {/* <Image
+              <Image
                 source={Images.icon.poistion_bell}
                 resizeMode="contain"
                 style={styles.projectItemImage}
-              /> */}
+              />
             </TouchableOpacity>
           )}
         </View>
@@ -332,20 +332,30 @@ const Projects = ({navigation}) => {
       />
       <Header />
 
-      <FlatList
-        contentContainerStyle={styles.flatListContentContainer}
-        data={jobsData}
-        renderItem={renderItem}
-        keyExtractor={(item, index) => index.toString()}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={getNotificationData}
-          />
-        }
-      />
+      {jobsData.length == 0 ? (
+        <View style={{
+          flex:1,
+          justifyContent:'center',
+          alignItems:'center'
+        }}>
+          <ScaleText fontSize={Fonts.size.size_17} fontFamily={Fonts.type.Bold} text={'No Jobs Found'} />
+        </View>
+      ) : (
+        <FlatList
+          contentContainerStyle={styles.flatListContentContainer}
+          data={jobsData}
+          renderItem={renderItem}
+          keyExtractor={(item, index) => index.toString()}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={getNotificationData}
+            />
+          }
+        />
+      )}
       <PopupModal
         isModalVisible={deletemodal}
         GifEnable={true}

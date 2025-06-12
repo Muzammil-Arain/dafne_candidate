@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  Alert,
 } from 'react-native';
 import {StackNav} from '../../naviagtor/stackkeys';
 import {Colors, Fonts, Images} from '../../theme';
@@ -25,6 +26,7 @@ import {styles} from './styles';
 import {useDispatch} from 'react-redux';
 import {REGISTER_STEP_1_API, REGISTER_STEP_2_API} from '../../ducks/auth';
 import RNFS from 'react-native-fs';
+import { saveFileToFirestore } from './helper';
 
 const isDarkMode = datahandler.getAppTheme();
 
@@ -134,10 +136,11 @@ const SignUp = () => {
       const file = await DocumentPicker.pickSingle({
         type: DocumentPicker.types.allFiles,
       });
-      const fileUri = file.uri;
-      const fileType = file.type || 'application/pdf';
+      await saveFileToFirestore(statedata.setupOneResponce.data.email, file);
+      // const fileUri = file.uri;
+      // const fileType = file.type || 'application/pdf';
       try {
-        const base64Data = await RNFS.readFile(fileUri, 'base64');
+        // const base64Data = await RNFS.readFile(fileUri, 'base64');
         // setStateData(prev => ({
         //   ...prev,
         //   selectedFile: `data:${fileType};base64,${base64Data}`,

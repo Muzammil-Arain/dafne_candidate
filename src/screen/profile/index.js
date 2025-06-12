@@ -89,7 +89,7 @@ const Profile = ({navigation, route}) => {
   const focused = useIsFocused();
   const refRBSheet = useRef();
   const [numOfLinesMap, setNumOfLinesMap] = useState({});
-  console.log("🚀 ~ Profile ~ numOfLinesMap:", numOfLinesMap)
+  console.log('🚀 ~ Profile ~ numOfLinesMap:', numOfLinesMap);
   const [refreshing, setRefreshing] = useState(false);
   const [statedata, setStateData] = useState({
     expandedIndex: null,
@@ -532,7 +532,7 @@ const Profile = ({navigation, route}) => {
   const toggleNumberOfLines = index => {
     setNumOfLinesMap(prev => ({
       ...prev,
-      [index]: prev[index] === 2 ? 1 : 2,
+      [index]: prev[index] === 0 ? 1 : 0, // 0 means unlimited lines (expanded)
     }));
   };
 
@@ -664,95 +664,103 @@ const Profile = ({navigation, route}) => {
       {statedata.expandedIndex === index && index == 1 && (
         <View style={[styles.submenuContainer]}>
           {item.subItems.map((val, subIndex) => {
-            console.log(
-              '🚀 ~ Profile ~ numOfLinesMap:',
-              numOfLinesMap[subIndex],
-            );
+            const isExpanded = numOfLinesMap[subIndex] === 0;
+
             return (
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  paddingHorizontal: ms(20),
-                  backgroundColor: Colors.App_Background,
-                  height: ms(80),
-                  borderRadius: ms(14),
-                  marginBottom: ms(10),
+              <TouchableOpacity
+                onPress={() => {
+                  NavigationService.navigate(StackNav.WebViewScreen, {
+                    title: val.title,
+                    url: val.photo,
+                    id: val.id,
+                    key: val.key,
+                    type: val.isVideo ? 'video' : 'photo',
+                  });
                 }}>
-                <ScaleText
-                  TextStyle={{textTransform: 'capitalize', width: ms(180)}}
-                  fontSize={ms(13)}
-                  fontFamily={Fonts.type.Mediu}
-                  text={val.title}
-                  numberOfLines={numOfLinesMap[subIndex] || 1}
-                />
-                <TouchableOpacity onPress={() => toggleNumberOfLines(subIndex)}>
-                  <ScaleText
-                    fontSize={ms(18)}
-                    fontFamily={Fonts.type.Bold}
-                    text={numOfLinesMap[subIndex] == 1 ? '+' : '-'}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    NavigationService.navigate(StackNav.WebViewScreen, {
-                      title: val.title,
-                      url: val.photo,
-                      id: val.id,
-                      key: val.key,
-                      type: val.isVideo ? 'video' : 'photo',
-                    });
+                <View
+                  key={subIndex}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingHorizontal: ms(20),
+                    backgroundColor: Colors.App_Background,
+                    height: 'auto',
+                    borderRadius: ms(14),
+                    marginBottom: ms(10),
+                    paddingVertical: ms(10),
                   }}>
-                  {val.isVideo ? (
-                    <View
-                      style={{
-                        marginRight: ms(10),
-                      }}>
-                      <ButtonView
-                        onPress={() => {
-                          setStateData(prev => ({
-                            ...prev,
-                            setVideoUrl: val.photo,
-                          }));
-                        }}>
-                        <VectorIcon
-                          color={Colors.DarkYellow}
-                          size={ms(40)}
-                          name={'video-collection'}
-                          type={'MaterialIcons'}
-                        />
-                      </ButtonView>
-                    </View>
-                  ) : (
-                    <FastImageComponent
-                      uri={val.photo ?? ''}
-                      style={{
-                        width: ms(60),
-                        height: ms(60),
-                        borderRadius: ms(4),
-                        borderWidth: 1,
-                        borderColor: Colors.more_black[900],
-                        marginBottom: ms(5),
-                      }}
-                      resizeMode="cover"
-                      fallbackImage={Images.images.Imagenotfound}
+                  <ScaleText
+                    TextStyle={{
+                      textTransform: 'capitalize',
+                      width: ms(180),
+                    }}
+                    fontSize={ms(13)}
+                    fontFamily={Fonts.type.Mediu}
+                    text={val.title}
+                    numberOfLines={isExpanded ? 0 : 1}
+                  />
+
+                  <TouchableOpacity
+                    onPress={() => toggleNumberOfLines(subIndex)}>
+                    <ScaleText
+                      fontSize={ms(18)}
+                      fontFamily={Fonts.type.Bold}
+                      text={isExpanded ? '-' : '+'}
                     />
-                    // <Image
-                    //   source={{uri: val.photo ?? DummyImage}}
-                    //   resizeMode="cover"
-                    //   style={{
-                    //     width: ms(60),
-                    //     height: ms(60),
-                    //     borderRadius: ms(4),
-                    //     borderWidth: 2,
-                    //     borderColor: Colors.more_black[900],
-                    //     marginBottom: ms(5),
-                    //   }}
-                    // />
-                  )}
-                </TouchableOpacity>
-              </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity>
+                    {val.isVideo ? (
+                      <View style={{marginRight: ms(10)}}>
+                        <ButtonView
+                          onPress={() => {
+                            setStateData(prev => ({
+                              ...prev,
+                              setVideoUrl: val.photo,
+                            }));
+                          }}>
+                          {val.photo ? (
+                            <VectorIcon
+                              color={Colors.DarkYellow}
+                              size={ms(40)}
+                              name={'video-collection'}
+                              type={'MaterialIcons'}
+                            />
+                          ) : (
+                            <Image
+                              style={{
+                                width: ms(60),
+                                height: ms(60),
+                                borderRadius: ms(4),
+                                borderWidth: 1,
+                                borderColor: Colors.more_black[900],
+                                marginBottom: ms(5),
+                                marginRight: ms(-7),
+                              }}
+                              source={Images.images.videonotfound}
+                            />
+                          )}
+                        </ButtonView>
+                      </View>
+                    ) : (
+                      <FastImageComponent
+                        uri={val.photo ?? ''}
+                        style={{
+                          width: ms(60),
+                          height: ms(60),
+                          borderRadius: ms(4),
+                          borderWidth: 1,
+                          borderColor: Colors.more_black[900],
+                          marginBottom: ms(5),
+                        }}
+                        resizeMode="cover"
+                        fallbackImage={Images.images.Imagenotfound}
+                      />
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
             );
           })}
         </View>

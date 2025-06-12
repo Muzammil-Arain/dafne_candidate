@@ -52,11 +52,10 @@ const What = ({navigation, route}) => {
   });
   console.log(
     '🚀 ~ What ~What ~ statedata statedata:',
-    statedata?.currencyvalue,
+    statedata?.Errfrequencyvalue,
   );
 
   const [jobsData, setJobsData] = useState(null);
-  console.log('🚀 ~ What ~ jobsData:', jobsData);
   const [refreshing, setRefreshing] = useState(false);
 
   const [formObj, betweenProps, andProps, NegotiableProps] = useHookForm(
@@ -235,7 +234,7 @@ const What = ({navigation, route}) => {
     // Additional validation for frequencyvalue and currencyvalue
     let updateErrors = {};
 
-    if (!statedata.frequencyvalue) updateErrors.Errfrequencyvalue = true;
+    // if (!statedata.frequencyvalue) updateErrors.Errfrequencyvalue = true;
 
     // if (!statedata.currencyvalue) updateErrors.Errcurrencyvalue = true;
 
@@ -571,9 +570,14 @@ const What = ({navigation, route}) => {
                   type: 'manual',
                   message: 'Please enter And',
                 });
-                // if (!statedata.currencyvalue) {
-                //   setStateData(prev => ({...prev, Errcurrencyvalue: true}));
-                // }
+
+                if (!statedata.currencyvalue || !statedata.frequencyvalue) {
+                  setStateData(prev => ({
+                    ...prev,
+                    Errcurrencyvalue: true,
+                    Errfrequencyvalue: true,
+                  }));
+                }
               }
             } else {
               formObj.setError('and', {
@@ -584,7 +588,11 @@ const What = ({navigation, route}) => {
                 type: 'manual',
                 message: null,
               });
-              setStateData(prev => ({...prev, Errcurrencyvalue: false}));
+              setStateData(prev => ({
+                ...prev,
+                Errcurrencyvalue: false,
+                Errfrequencyvalue: false,
+              }));
             }
             // useHookField(formObj, 'and')
             // await formObj.setError('and', 'acbde')

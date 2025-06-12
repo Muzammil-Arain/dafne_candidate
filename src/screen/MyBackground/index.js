@@ -12,7 +12,7 @@ import {
   Loader,
   TextInputCustom,
 } from '../../components';
-import {Colors} from '../../theme';
+import {Colors, Fonts} from '../../theme';
 import {StackNav} from '../../naviagtor/stackkeys';
 import datahandler from '../../helper/datahandler';
 import {NavigationService, Util} from '../../utils';
@@ -32,6 +32,7 @@ import {styles} from './styles';
 import {
   changeSteps,
   dateFormet,
+  getoptionsdata,
   progressSteps,
   progressTextSteps,
   steps,
@@ -66,6 +67,7 @@ import {useFocusEffect} from '@react-navigation/native';
 
 const MyBackground = ({navigation, route}) => {
   const userData = route?.params?.data;
+  console.log('🚀 ~ MyBackground ~ userData:', userData);
   const [formObj, emailProps, termProps] = useHookForm(
     ['email', 'password', 'term'],
     {term: false, email: ' '},
@@ -96,6 +98,11 @@ const MyBackground = ({navigation, route}) => {
         location: '',
         startDate: '',
         endDate: '',
+        flightTime: '',
+        turbineTime: '',
+        pictime: '',
+        sictime: '',
+        typerate: '',
         currently_working: null,
       },
     ],
@@ -164,7 +171,7 @@ const MyBackground = ({navigation, route}) => {
     getDegree: [],
     fullscreenisLoading: false,
   });
-  console.log("🚀 ~ MyBackground ~ statedata:", statedata.Experience.length)
+  console.log('🚀 ~ MyBackground ~ statedata:', statedata);
 
   const handleNext = index => {
     setStateData(prev => ({...prev, currentStep: index, isLoading: false}));
@@ -192,6 +199,14 @@ const MyBackground = ({navigation, route}) => {
           startDate: item?.start_date || '',
           endDate: item?.end_date || '',
           still_working: item?.still_working == 1,
+
+          flightTime: item?.flightTime,
+          turbineTime: item?.turbineTime,
+          pictime: item?.pictime,
+          sictime: item?.sictime,
+          typerate: {
+            name: item?.typerate?.name,
+          },
         })) || [];
 
       const filledEducation =
@@ -252,34 +267,50 @@ const MyBackground = ({navigation, route}) => {
         })) || [];
 
       const filledLicense =
-        userData.license_certificates
-          ?.filter(item => item?.license_name && item?.license_name)
-          .map(item => ({
-            license: {
-              name: item.license_name,
-              id: item.license_id,
-            },
-            issue_country: {
-              id: item?.license_country_id,
-              name: item?.license_country_name,
-            },
-            id: item.id,
-          })) || [];
+        Array.isArray(userData?.license_certificates) &&
+        userData.license_certificates.length > 0
+          ? userData.license_certificates
+              .filter(item => item?.license_name)
+              .map(item => ({
+                license: {
+                  name: item.license_name,
+                  id: item.license_id,
+                },
+                issue_country: {
+                  id: item.license_country_id,
+                  name: item.license_country_name,
+                },
+                id: item.id,
+              }))
+          : [
+              {
+                license: '',
+                issue_country: '',
+              },
+            ];
 
       const filledCertificate =
-        userData.license_certificates
-          ?.filter(item => item?.certificate_name && item?.certificate_name)
-          .map(item => ({
-            certificate: {
-              name: item?.certificate_name,
-              id: item?.certificate_id,
-            },
-            issue_country: {
-              name: item?.certificate_country_name,
-              id: item?.certificate_country_id,
-            },
-            id: item.id,
-          })) || [];
+        Array.isArray(userData?.license_certificates) &&
+        userData.license_certificates.length > 0
+          ? userData.license_certificates
+              .filter(item => item?.certificate_name)
+              .map(item => ({
+                certificate: {
+                  name: item?.certificate_name,
+                  id: item?.certificate_id,
+                },
+                issue_country: {
+                  name: item?.certificate_country_name,
+                  id: item?.certificate_country_id,
+                },
+                id: item.id,
+              }))
+          : [
+              {
+                certificate: '',
+                issue_country: '',
+              },
+            ];
 
       setStateData(prev => ({
         ...prev,
@@ -477,6 +508,13 @@ const MyBackground = ({navigation, route}) => {
         exp => (exp.still_working == '0' && exp.endDate) || '',
       ).filter(Boolean),
       still_working: Experience.map(exp => (exp.still_working ? '1' : '0')),
+
+      //optional
+      flight_time: Experience.map(exp => exp.flightTime),
+      turbin_time: Experience.map(exp => exp.turbineTime),
+      pic_time: Experience.map(exp => exp.pictime),
+      sic_time: Experience.map(exp => exp.sictime),
+      require_type_rating: Experience.map(exp => exp.typerate?.name),
     };
 
     setStateData(prev => ({...prev, isLoading: 'WORK_EXPERIENCE'}));
@@ -730,7 +768,7 @@ const MyBackground = ({navigation, route}) => {
       return (
         <View key={expIndex}>
           <View>
-            {expIndex !== 0 &&  (
+            {expIndex !== 0 && (
               <ButtonView
                 onPress={() => handleRemoveExperience(expIndex, experience)}>
                 <ScaleText
@@ -868,6 +906,99 @@ const MyBackground = ({navigation, route}) => {
             </View>
             {/* )} */}
           </View>
+          {experience.jobTitle.name == 'PILOT' && (
+            <View style={{}}>
+              <View
+                style={{
+                  backgroundColor: Colors.Black,
+                  height: ms(40),
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginVertical: ms(10),
+                }}>
+                <ScaleText
+                  color={Colors.White}
+                  fontSize={Fonts.size.size_17}
+                  textAlign={'center'}
+                  text={'Flight Time Experience'}
+                />
+              </View>
+              <View style={styles.row}>
+                <TextInputCustom
+                  cuntomStyle={{width: ms(130)}}
+                  optional={true}
+                  isDarkMode={isDarkMode}
+                  placeholder="Total flight time"
+                  label="Total flight time"
+                  value={experience.flightTime}
+                  onChangeText={text =>
+                    setStateData(prev => {
+                      const updatedExperience = [...prev.Experience];
+                      updatedExperience[expIndex].flightTime = text;
+                      return {...prev, Experience: updatedExperience};
+                    })
+                  }
+                />
+                <TextInputCustom
+                  cuntomStyle={{width: ms(130)}}
+                  optional={true}
+                  isDarkMode={isDarkMode}
+                  placeholder="Total turbine time"
+                  label="Total turbine time"
+                  value={experience.turbineTime}
+                  onChangeText={text =>
+                    setStateData(prev => {
+                      const updatedExperience = [...prev.Experience];
+                      updatedExperience[expIndex].turbineTime = text;
+                      return {...prev, Experience: updatedExperience};
+                    })
+                  }
+                />
+              </View>
+              <View style={styles.row}>
+                <TextInputCustom
+                  cuntomStyle={{width: ms(130)}}
+                  optional={true}
+                  isDarkMode={isDarkMode}
+                  placeholder="Total PIC time"
+                  label="Total PIC time"
+                  value={experience.pictime}
+                  onChangeText={text =>
+                    setStateData(prev => {
+                      const updatedExperience = [...prev.Experience];
+                      updatedExperience[expIndex].pictime = text;
+                      return {...prev, Experience: updatedExperience};
+                    })
+                  }
+                />
+                <TextInputCustom
+                  cuntomStyle={{width: ms(130)}}
+                  optional={true}
+                  isDarkMode={isDarkMode}
+                  placeholder="Total SIC time"
+                  label="Total SIC time"
+                  value={experience.sictime}
+                  onChangeText={text =>
+                    setStateData(prev => {
+                      const updatedExperience = [...prev.Experience];
+                      updatedExperience[expIndex].sictime = text;
+                      return {...prev, Experience: updatedExperience};
+                    })
+                  }
+                />
+              </View>
+              <CustomDropdown
+                isDarkMode={isDarkMode}
+                value={experience?.typerate?.name}
+                label="Type Rate"
+                selectedValue={value =>
+                  handleFieldChange(expIndex, 'typerate', value)
+                }
+                data={getoptionsdata}
+                // data={statedata.getSkills}
+              />
+            </View>
+          )}
         </View>
       );
     };
@@ -1249,7 +1380,7 @@ const MyBackground = ({navigation, route}) => {
       return (
         <View key={visaIndex}>
           <View>
-            {visaIndex !== 0 &&(
+            {visaIndex !== 0 && (
               <ButtonView onPress={() => handleRemoveVisa(visaIndex, visaVal)}>
                 <ScaleText
                   TextStyle={{marginRight: ms(10)}}
@@ -1483,7 +1614,7 @@ const MyBackground = ({navigation, route}) => {
       return (
         <View style={{width: ms(255)}} key={skillIndex}>
           <>
-            {skillIndex !== 0 &&  (
+            {skillIndex !== 0 && (
               <ButtonView
                 onPress={() => handleDeleteSkill(skillIndex, skillItem)}>
                 <ScaleText

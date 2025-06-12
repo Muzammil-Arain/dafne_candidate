@@ -259,11 +259,11 @@ export const GET_DEGREE = {
   type: REQUEST_TYPE.POST,
 };
 
-export const GET_STATE = {
-  route: `${API}get-states`,
-  access_token_required: true,
-  type: REQUEST_TYPE.POST,
-};
+// export const GET_STATE = {
+//   route: `${API}get-states`,
+//   access_token_required: true,
+//   type: REQUEST_TYPE.POST,
+// };
 
 export const PROFESSIONAL_PROFILE = {
   route: `${API}candidate/professional-profile`,
@@ -441,6 +441,18 @@ export const TERMS_AND_CONDITIONS = {
 
 export const DELETE_PHOTO_VIDEOS = {
   route: `${API}candidate/user-media/remove`,
+  access_token_required: true,
+  type: REQUEST_TYPE.POST,
+};
+
+export const PHOTO_LABEL = {
+  route: `${API}candidate/photos-label`,
+  access_token_required: true,
+  type: REQUEST_TYPE.POST,
+};
+
+export const VIDEO_LABEL = {
+  route: `${API}candidate/videos-label`,
   access_token_required: true,
   type: REQUEST_TYPE.POST,
 };

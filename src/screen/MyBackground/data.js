@@ -46,3 +46,13 @@ export let steps = [
     })
     steps = update
   }
+
+
+export const getoptionsdata = [
+  {
+    name: 'yes',
+  },
+  {
+    name: 'no',
+  }
+];
