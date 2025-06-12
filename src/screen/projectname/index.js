@@ -16,9 +16,6 @@ const isDarkMode = datahandler.getAppTheme();
 
 const ProjectName = ({navigation, route}) => {
   const {key} = route?.params ?? '';
-  console.log('====================================');
-  console.log(key, 'keykeykeykeykeykeykeykeykeykey');
-  console.log('====================================');
   const [formObj, jobProps] = useHookForm(['job'], {}, ValidationSchema.job);
   const dispatch = useDispatch();
 

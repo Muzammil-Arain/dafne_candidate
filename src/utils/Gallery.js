@@ -1,11 +1,11 @@
 import PermissionUtil from './PermissionUtil';
-import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
-import {Alert, Linking} from 'react-native';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import { Alert, Linking } from 'react-native';
 
 export const TakeCameraPicture = media => {
   return new Promise((resolve, reject) => {
     const options = {
-      mediaType: media ? 'video' : 'photo', 
+      mediaType: media ? 'video' : 'photo',
       presentationStyle: 'fullScreen',
       quality: 0.5,
       maxWidth: 500,
@@ -20,7 +20,7 @@ export const TakeCameraPicture = media => {
 
     PermissionUtil.checkPermission(PermissionUtil.types.CAMERA, () => {
       launchCamera(options, response => {
-      console.log("🚀 ~ PermissionUtil.checkPermission ~ response:", response)
+        console.log("🚀 ~ PermissionUtil.checkPermission ~ response:", response)
         if (response.didCancel) {
           reject('User cancelled media capture');
         } else if (response.errorCode) {
@@ -64,10 +64,12 @@ export const PickImageFromGallery = media => {
       options.videoQuality = 'medium';
     }
 
-    PermissionUtil.checkPermission(PermissionUtil.types.PHOTO_LIBRARY, () => {
+    PermissionUtil.checkPermission(PermissionUtil.types.GALLERY, () => {
       launchImageLibrary(options, response => {
+        console.log("🚀 ~ PermissionUtil.checkPermission options ~ response:", response)
+
         if (response.didCancel) {
-          alertLimitedAccess();
+          // alertLimitedAccess();
           reject('User cancelled image picker');
         } else if (response.errorCode) {
           handleError(response.errorCode, reject);
@@ -80,7 +82,7 @@ export const PickImageFromGallery = media => {
               name: asset.fileName,
             });
           } else {
-            alertLimitedAccess();
+            // alertLimitedAccess();
             reject('No file selected');
           }
         }
@@ -112,7 +114,7 @@ const alertLimitedAccess = () => {
     'Limited Access',
     'You have allowed limited access to photos. Please select photos from your allowed list or enable full access in your device settings.',
     [
-      {text: 'Cancel', style: 'cancel'},
+      { text: 'Cancel', style: 'cancel' },
       {
         text: 'Open Settings',
         onPress: () => Linking.openSettings(),
@@ -120,3 +122,8 @@ const alertLimitedAccess = () => {
     ],
   );
 };
+
+
+
+
+

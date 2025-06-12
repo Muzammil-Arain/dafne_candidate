@@ -608,15 +608,33 @@ const AuthProfile = ({navigation}) => {
       console.warn('No Passport data found');
       return;
     }
-    const handlepayload = {
-      passport_country_id: Passport.map(item => item.passport?.id || null),
-      passport_expiry_date: Passport.map(item => item.dateofexp || null),
-      ...(Visa?.[0]?.visa !== '' && {
-        visa_country_id: Visa.map(item => item.visa?.id),
-        visa_expiry_date: Visa.map(item => item.dateofexp),
-      }),
-    };
+    const handlepayload = {};
 
+    const passport_country_id = Passport.map(item => item.passport?.id || null);
+    const passport_expiry_date = Passport.map(item => item.dateofexp || null);
+
+    // Add passport fields only if at least one non-null value
+    if (passport_country_id.some(id => id !== null)) {
+      handlepayload.passport_country_id = passport_country_id;
+    }
+    if (passport_expiry_date.some(date => date !== null && date !== '')) {
+      handlepayload.passport_expiry_date = passport_expiry_date;
+    }
+
+    // Handle visa conditionally
+    if (Visa?.[0]?.visa !== '') {
+      const visa_country_id = Visa.map(item => item.visa?.id || null);
+      const visa_expiry_date = Visa.map(item => item.dateofexp || null);
+
+      if (visa_country_id.some(id => id !== null)) {
+        handlepayload.visa_country_id = visa_country_id;
+      }
+      if (visa_expiry_date.some(date => date !== null && date !== '')) {
+        handlepayload.visa_expiry_date = visa_expiry_date;
+      }
+    }
+
+    console.log('Final Payload:', handlepayload);
     dispatch(
       PASSPORT_VISA_API.request({
         payloadApi: handlepayload,

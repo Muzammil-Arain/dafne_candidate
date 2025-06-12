@@ -33,6 +33,7 @@ const What = ({navigation, route}) => {
   const dispatch = useDispatch();
   const {perID, isFromKeyFalse} = route?.params;
   console.log('🚀 ~ What ~ perID:', perID);
+  console.log("🚀 ~ What ~ isFromKeyFalse:", isFromKeyFalse)
   const [statedata, setStateData] = useState({
     isBackgound: true,
     relevantJob: true,
@@ -273,13 +274,12 @@ const What = ({navigation, route}) => {
       }),
     };
 
-    console.log('🚀 ~ What ~ formdata:', formdata);
 
     dispatch(
       PREFERABLE_INDUSTRY_API.request({
         payloadApi: formdata,
         cb: res => {
-          if (isFromKeyFalse) {
+          if (!isFromKeyFalse) {
             NavigationService.navigate(StackNav.Where, {
               key: true,
               perID: perID,
