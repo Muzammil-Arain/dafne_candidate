@@ -115,10 +115,8 @@ const Profile = ({navigation, route}) => {
     userNotes: '',
     setVideoUrl: false,
   });
+  console.log('🚀 ~ Profile ~ statedata:', statedata?.userProfileData);
   const flatListRef = useRef();
-  console.log('====================================');
-  console.log(statedata?.userProfileData, 'statedata?.userProfileData');
-  console.log('====================================');
 
   const [state, setState] = useState({
     logoutModal: false,
@@ -144,60 +142,52 @@ const Profile = ({navigation, route}) => {
       icon: Images.icon.gallery,
       subItems: [
         {
+          id: PROFESSIONAL_PROFILE_API,
+          key: 'professional_profile',
+          title: statedata?.userProfileData?.candidate_photos[0]?.question,
+          photo: statedata?.userProfileData?.candidate_photos[0]?.answer,
+        },
+        {
           id: BEHIND_UNIFORM_API,
           key: 'behind_the_uniform',
-          title: 'behind the uniform',
-          photo:
-            statedata?.userProfileData?.candidate_photos?.behind_the_uniform,
+
+          title: statedata?.userProfileData?.candidate_photos[1]?.question,
+          photo: statedata?.userProfileData?.candidate_photos[1]?.answer,
         },
         {
           id: FAVORITE_HOBBY_API,
           key: 'favorite_hobby',
-          title: 'favorite hobby',
-          photo: statedata?.userProfileData?.candidate_photos?.favorite_hobby,
-        },
-        {
-          id: PROFESSIONAL_PROFILE_API,
-          key: 'professional_profile',
-          title: 'professional profile',
-          photo:
-            statedata?.userProfileData?.candidate_photos?.professional_profile,
+
+          title: statedata?.userProfileData?.candidate_photos[2]?.question,
+          photo: statedata?.userProfileData?.candidate_photos[2]?.answer,
         },
         {
           isVideo: true,
           id: VIDEO_QUESTION_1_API,
-          key: 'career_achievement_media',
-          title: 'What aspects of your job do',
-          photo:
-            statedata?.userProfileData?.candidate_videos
-              ?.career_achievement_media,
+          key: 'media_aspects_of_job',
+          title: statedata?.userProfileData?.candidate_videos[0]?.question,
+          photo: statedata?.userProfileData?.candidate_videos[0]?.answer,
         },
         {
           isVideo: true,
           id: VIDEO_QUESTION_2__API,
           key: 'career_achievement_media',
-          title: 'What career achievement are',
-          photo:
-            statedata?.userProfileData?.candidate_videos
-              ?.career_achievement_media,
+          title: statedata?.userProfileData?.candidate_videos[1]?.question,
+          photo: statedata?.userProfileData?.candidate_videos[1]?.answer,
         },
         {
           isVideo: true,
           id: VIDEO_QUESTION_3_API,
-          key: 'fun_fact_about_you_media',
-          title: 'What hobby or interest outside of',
-          photo:
-            statedata?.userProfileData?.candidate_videos
-              ?.fun_fact_about_you_media,
+          key: 'hobby_or_interest_media',
+          title: statedata?.userProfileData?.candidate_videos[2]?.question,
+          photo: statedata?.userProfileData?.candidate_videos[2]?.answer,
         },
         {
           isVideo: true,
           id: VIDEO_QUESTION_4_API,
-          key: 'hobby_or_interest_media',
-          title: 'What’s a fun fact about you that most',
-          photo:
-            statedata?.userProfileData?.candidate_videos
-              ?.hobby_or_interest_media,
+          key: 'fun_fact_about_you_media',
+          title: statedata?.userProfileData?.candidate_videos[3]?.question,
+          photo: statedata?.userProfileData?.candidate_videos[3]?.answer,
         },
       ],
     },
@@ -528,7 +518,7 @@ const Profile = ({navigation, route}) => {
     });
   };
 
-   const toggleNumberOfLines = index => {
+  const toggleNumberOfLines = index => {
     setNumOfLinesMap(prev => ({
       ...prev,
       [index]: prev[index] === 0 ? 1 : 0, // 0 means unlimited lines (expanded)
@@ -664,19 +654,31 @@ const Profile = ({navigation, route}) => {
           {item.subItems.map((val, subIndex) => {
             const isExpanded = numOfLinesMap[subIndex] === 0;
             return (
-              <View
-                key={subIndex}
+              <TouchableOpacity
                 style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  paddingHorizontal: ms(20),
-                  backgroundColor: Colors.App_Background,
-                  height: ms(80),
-                  borderRadius: ms(14),
-                  marginBottom: ms(10),
+                }}
+                onPress={() => {
+                  NavigationService.navigate(StackNav.WebViewScreen, {
+                    title: val.title,
+                    url: val.photo,
+                    id: val.id,
+                    key: val.key,
+                    type: val.isVideo ? 'video' : 'photo',
+                  });
                 }}>
-                <ScaleText
+                <View
+                  key={subIndex}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingHorizontal: ms(20),
+                    backgroundColor: Colors.App_Background,
+                    height: ms(80),
+                    borderRadius: ms(14),
+                    marginBottom: ms(10),
+                  }}>
+                  <ScaleText
                     TextStyle={{
                       textTransform: 'capitalize',
                       width: ms(180),
@@ -686,7 +688,7 @@ const Profile = ({navigation, route}) => {
                     text={val.title}
                     numberOfLines={isExpanded ? 0 : 1}
                   />
-  <TouchableOpacity
+                  <TouchableOpacity
                     onPress={() => toggleNumberOfLines(subIndex)}>
                     <ScaleText
                       fontSize={ms(18)}
@@ -694,16 +696,7 @@ const Profile = ({navigation, route}) => {
                       text={isExpanded ? '-' : '+'}
                     />
                   </TouchableOpacity>
-                                  <TouchableOpacity
-                  onPress={() => {
-                    NavigationService.navigate(StackNav.WebViewScreen, {
-                      title: val.title,
-                      url: val.photo,
-                      id: val.id,
-                      key: val.key,
-                      type: val.isVideo ? 'video' : 'photo',
-                    });
-                  }}>
+
                   {val.isVideo ? (
                     <View
                       style={{
@@ -713,7 +706,7 @@ const Profile = ({navigation, route}) => {
                         onPress={() => {
                           setStateData(prev => ({
                             ...prev,
-                            setVideoUrl: val.photo,
+                            setVideoUrl: val.answer,
                           }));
                         }}>
                         <VectorIcon
@@ -725,34 +718,38 @@ const Profile = ({navigation, route}) => {
                       </ButtonView>
                     </View>
                   ) : (
-                    <FastImageComponent
-                      uri={val.photo ?? ''}
-                      style={{
-                        width: ms(60),
-                        height: ms(60),
-                        borderRadius: ms(4),
-                        borderWidth: 1,
-                        borderColor: Colors.more_black[900],
-                        marginBottom: ms(5),
-                      }}
-                      resizeMode="cover"
-                      fallbackImage={Images.images.Imagenotfound}
-                    />
-                    // <Image
-                    //   source={{uri: val.photo ?? DummyImage}}
-                    //   resizeMode="cover"
+                    // <FastImageComponent
+                    //   uri={val.photo ?? ''}
                     //   style={{
                     //     width: ms(60),
                     //     height: ms(60),
                     //     borderRadius: ms(4),
-                    //     borderWidth: 2,
+                    //     borderWidth: 1,
                     //     borderColor: Colors.more_black[900],
                     //     marginBottom: ms(5),
                     //   }}
+                    //   resizeMode="cover"
+                    //   fallbackImage={Images.images.Imagenotfound}
                     // />
+                    <Image
+                      source={
+                        val.photo
+                          ? {uri: val.photo}
+                          : Images.images.Imagenotfound
+                      }
+                      resizeMode="cover"
+                      style={{
+                        width: ms(60),
+                        height: ms(60),
+                        borderRadius: ms(4),
+                        borderWidth: 2,
+                        borderColor: Colors.more_black[900],
+                        marginBottom: ms(5),
+                      }}
+                    />
                   )}
-                </TouchableOpacity>
-              </View>
+                </View>
+              </TouchableOpacity>
             );
           })}
         </View>

@@ -5,9 +5,15 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
-import React, {useLayoutEffect, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useState} from 'react';
 import {screenOptions} from '../../naviagtor/config';
-import {AppButton, Background, LinerButton, ScaleText, VectorIcon} from '../../common';
+import {
+  AppButton,
+  Background,
+  LinerButton,
+  ScaleText,
+  VectorIcon,
+} from '../../common';
 import {Colors, Fonts, Images} from '../../theme';
 import {ButtonView} from '../../components';
 import {ProgressBar} from 'react-native-paper';
@@ -21,6 +27,7 @@ import {useDispatch} from 'react-redux';
 import {
   BEHIND_UNIFORM_API,
   FAVORITE_HOBBY_API,
+  PHOTO_LABEL_API,
   PROFESSIONAL_PROFILE_API,
   PROFILE_PERCENTAGE_API,
 } from '../../ducks/app';
@@ -31,21 +38,21 @@ const LinnerColour = ['#387FF1', '#224EC9'];
 const sectionsData = [
   {
     id: 1,
-    title: 'Professional Profile',
+    title: '',
     imageUri: 'https://i.postimg.cc/L5tWhKNt/Mask-Group-2.png',
     selected: false,
     err: false,
   },
   {
     id: 2,
-    title: 'Who is Behind the Uniform?',
+    title: '',
     imageUri: 'https://i.postimg.cc/1XR99HK3/Image-62.png',
     selected: false,
     err: false,
   },
   {
     id: 3,
-    title: 'Your favorite hobby?',
+    title: '',
     imageUri:
       'https://i.postimg.cc/wjR9T3DL/cute-woman-artist-drawing-acrylic-paints-canvas-82574-3737.png',
     selected: false,
@@ -59,13 +66,46 @@ const AuthPictureUpload = ({navigation, route}) => {
     selectedSection: null,
     dummyData: sectionsData,
     isloading: false,
+    question: {},
   });
 
-  console.log('====================================');
-  console.log(statedata, 'statedata');
-  console.log('====================================');
-
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(
+      PHOTO_LABEL_API.request({
+        payloadApi: {},
+        cb: async res => {
+          const sectionsData = [
+            {
+              id: 1,
+              title: res?.question_1,
+              imageUri: 'https://i.postimg.cc/L5tWhKNt/Mask-Group-2.png',
+              selected: false,
+              err: false,
+            },
+            {
+              id: 2,
+              title: res?.question_2,
+              imageUri: 'https://i.postimg.cc/1XR99HK3/Image-62.png',
+              selected: false,
+              err: false,
+            },
+            {
+              id: 3,
+              title: res?.question_3,
+              imageUri:
+                'https://i.postimg.cc/wjR9T3DL/cute-woman-artist-drawing-acrylic-paints-canvas-82574-3737.png',
+              selected: false,
+              err: false,
+            },
+          ];
+          console.log('🚀 ~ useEffect ~ sectionsData:', sectionsData);
+          setStateData(prev => ({...prev,dummyData:sectionsData }));
+        },
+      }),
+    );
+  }, []);
 
   useLayoutEffect(() => {
     navigation.setOptions(
@@ -193,7 +233,7 @@ const AuthPictureUpload = ({navigation, route}) => {
   };
 
   const renderSection = section => {
-    const [textLines, setTextLines] = useState(1); 
+    const [textLines, setTextLines] = useState(1);
 
     return (
       <View style={styles.sectionContainer} key={section.id}>
@@ -205,7 +245,6 @@ const AuthPictureUpload = ({navigation, route}) => {
             TextStyle={styles.textStyle}
             numberOfLines={textLines}
             text={section.title}
-
           />
           <View style={styles.lineControls}>
             <TouchableOpacity

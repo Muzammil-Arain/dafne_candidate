@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useLayoutEffect, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useState} from 'react';
 import {screenOptions} from '../../naviagtor/config';
 import {
   AppButton,
@@ -27,6 +27,7 @@ import {TakeCameraPicture} from '../../utils/Gallery';
 import {useDispatch} from 'react-redux';
 import {
   PROFILE_PERCENTAGE_API,
+  VIDEO_LABEL_API,
   VIDEO_QUESTION_1_API,
   VIDEO_QUESTION_2_API,
   VIDEO_QUESTION_3_API,
@@ -87,6 +88,52 @@ const AuthVideoUpload = ({navigation, route}) => {
       ),
     );
   }, [navigation, isDarkMode]);
+
+  useEffect(() => {
+    dispatch(
+      VIDEO_LABEL_API.request({
+        payloadApi: {},
+        cb: async res => {
+          const sections = [
+            {
+              id: 1,
+              video: false,
+              selected: false,
+              title:res?.question_1,
+              imageUri:
+                'https://i.postimg.cc/RVvwcjvb/Mask-Group-5-removebg-preview.png',
+            },
+            {
+              id: 2,
+              video: false,
+              selected: false,
+              title:res?.question_2,
+              imageUri:
+                'https://i.postimg.cc/RVvwcjvb/Mask-Group-5-removebg-preview.png',
+            },
+            {
+              id: 3,
+              video: false,
+              selected: false,
+               title:res?.question_3,
+              imageUri:
+                'https://i.postimg.cc/RVvwcjvb/Mask-Group-5-removebg-preview.png',
+            },
+            {
+              id: 4,
+              video: false,
+              selected: false,
+               title:res?.question_4,
+              imageUri:
+                'https://i.postimg.cc/RVvwcjvb/Mask-Group-5-removebg-preview.png',
+            },
+          ];
+          console.log('🚀 ~ useEffect ~ sectionsData:', sections);
+          setStateData(prev => ({...prev, dummyData: sections}));
+        },
+      }),
+    );
+  }, []);
 
   const handleActionButton = (section, actionType) => {
     if (actionType === 'Delete') {

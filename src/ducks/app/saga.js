@@ -65,6 +65,7 @@ import {
   TERMS_AND_CONDITIONS_API,
   API_GET_CITY_API,
   PHOTO_LABEL_API,
+  VIDEO_LABEL_API,
 } from '.';
 import {
   API_GET_CITY,
@@ -123,6 +124,7 @@ import {
   UPDATE_PROFILE,
   UPLOAD_MEDIA,
   UPLOAD_RESUME,
+  VIDEO_LABEL,
   VIDEO_QUESTION_1,
   VIDEO_QUESTION_2,
   VIDEO_QUESTION_3,
@@ -1096,19 +1098,19 @@ function* watchuploadphotos() {
 
 function* watchuploadvideos() {
   while (true) {
-    const {payload} = yield take(PHOTO_LABEL_API.request.type);
+    const {payload} = yield take(VIDEO_LABEL_API.request.type);
     const {payloadApi, cb} = payload;
     try {
       const response = yield call(
         callRequest,
-        PHOTO_LABEL,
+        VIDEO_LABEL,
         payloadApi,
       );
-      yield put(PHOTO_LABEL_API.success({data: response}));
+      yield put(VIDEO_LABEL_API.success({data: response}));
       cb?.(response);
     } catch (error) {
       yield put(
-        PHOTO_LABEL_API.failure({errorMessage: error.message}),
+        VIDEO_LABEL_API.failure({errorMessage: error.message}),
       );
     }
   }

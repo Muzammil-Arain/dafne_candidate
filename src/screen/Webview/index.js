@@ -87,7 +87,7 @@ const WebViewScreen = ({navigation, route}) => {
         cb: () => {
           setDeleteApiLoading(false);
           Util.showMessage('Profile updated successfully!', 'success');
-          NavigationService.navigate(StackNav.Profile);
+          NavigationService.goBack();
         },
       }),
     );

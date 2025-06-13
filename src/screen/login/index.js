@@ -178,7 +178,7 @@ const Login = ({navigation}) => {
         cb: async res => {
           refRBSheet.current.close();
           const {percentage} = res?.data?.user || {};
-          // NavigationService.navigate(StackNav.AuthVideoUpload);
+          // NavigationService.navigate(StackNav.AuthPictureUpload);
           // return
           if (!percentage) {
             NavigationService.navigate(StackNav.AuthProfile);
