@@ -24,6 +24,8 @@ import {useDispatch} from 'react-redux';
 import {dateFormet, dateFormetchange} from '../authprofile/data';
 import moment from 'moment';
 import {useIsFocused} from '@react-navigation/native';
+import GooglePlacesInput from '../../common/GooglePlace';
+import {TouchableOpacity} from 'react-native';
 
 const isDarkMode = datahandler.getAppTheme();
 
@@ -36,20 +38,21 @@ const Where = ({navigation, route}) => {
     isBackgound: true,
     getState: [],
   });
-  console.log('🚀 ~ Where ~ statedata:', jobsData?.Availablity_to_start);
 
   const [formData, setFormData] = useState({
-    location: '',
-    currentLocation: '',
+    location: {},
+    currentLocation: {},
     startDate: '',
     relocate: false,
+    locationPop: false,
+    currentLocationPopup: false,
     errors: {
       location: '',
       currentLocation: '',
       startDate: '',
     },
   });
-  console.log('🚀 ~ Where ~formData.startDate formData:', formData.startDate);
+  console.log('🚀 ~ Where ~ formData:', formData);
 
   useLayoutEffect(() => {
     navigation.setOptions(
@@ -66,20 +69,23 @@ const Where = ({navigation, route}) => {
     fetchAndUpdateState();
     setFormData(prev => ({
       ...prev,
-      location: {
-        name: jobsData?.location_for_job,
-        id: jobsData?.location_id,
+      location: jobsData?.location_for_job?.name && {
+        name: jobsData?.location_for_job?.name,
+        latitude: jobsData?.location_for_job?.lat,
+        longitude: jobsData?.location_for_job?.lng,
       },
-      currentLocation: {
-        name: jobsData?.current_location,
-        id: jobsData?.current_location_id,
+      currentLocation: jobsData?.current_location?.name && {
+        name: jobsData?.current_location?.name,
+        latitude: jobsData?.current_location?.lat,
+        longitude: jobsData?.current_location?.lng,
       },
       startDate: jobsData?.Availablity_to_start
         ? jobsData?.Availablity_to_start
-        : moment().format(
-            dateFormet,
-          ),
-      relocate: jobsData?.willing_to_relocate == 1 ? true : false,
+        : moment().format(dateFormet),
+    }));
+    setStateData(prev => ({
+      ...prev,
+      isBackgound: jobsData?.willing_to_relocate == 1 ? true : false,
     }));
   }, [navigation, isfoucsed]);
 
@@ -97,9 +103,9 @@ const Where = ({navigation, route}) => {
 
   const validateForm = () => {
     let errors = {};
-    if (!formData.location) errors.location = 'Please select a location';
-    // if (statedata.isBackgound || !formData.currentLocation)
-    //   errors.currentLocation = 'Please select your current location';
+    if (!formData.location.name) errors.location = 'Please select a location';
+    if (statedata.isBackgound && !formData.currentLocation.name)
+      errors.currentLocation = 'Please select your current location';
     if (!jobsData?.Availablity_to_start && !formData.startDate) {
       errors.startDate = 'Please select a start date';
     }
@@ -111,20 +117,60 @@ const Where = ({navigation, route}) => {
   const onSubmit = async () => {
     if (!validateForm()) return;
 
-    const payload = new FormData();
-    payload.append('preferable_industry_id', perID ?? '1');
-    payload.append('location_for_job', formData.location.id);
-    formData.currentLocation.id &&
-      payload.append('current_location', formData.currentLocation.id);
-    payload.append(
-      'Availablity_to_start',
-      !jobsData?.Availablity_to_start ||
-        jobsData?.Availablity_to_start === 'Invalid date'
-        ? moment(formData.startDate).format('MMM Do YY')
-        : jobsData?.Availablity_to_start,
-    );
+    // const payload = new FormData();
+    // payload.append('preferable_industry_id', perID ?? '1');
+    // payload.append(
+    //   'location_for_job',
+    //   JSON.stringify({
+    //     lat: formData.location?.latitude,
+    //     lng: formData.location?.longitude,
+    //     name: formData.location?.name,
+    //   }),
+    // );
 
-    payload.append('willing_to_relocate', statedata.isBackgound ? 1 : 0);
+    // if (formData.currentLocation) {
+    //   payload.append(
+    //     'current_location',
+    //     JSON.stringify({
+    //       lat: formData.currentLocation?.latitude,
+    //       lng: formData.currentLocation?.longitude,
+    //       name: formData.currentLocation?.name,
+    //     }),
+    //   );
+    // }
+    // payload.append(
+    //   'Availablity_to_start',
+    //   !jobsData?.Availablity_to_start ||
+    //     jobsData?.Availablity_to_start === 'Invalid date'
+    //     ? moment(formData.startDate).format('MMM Do YY')
+    //     : jobsData?.Availablity_to_start,
+    // );
+
+    // payload.append('willing_to_relocate', statedata.isBackgound ? 1 : 0);
+    const payload = {
+      preferable_industry_id: perID ?? '1',
+      location_for_job: {
+        lat: formData.location?.latitude,
+        lng: formData.location?.longitude,
+        name: formData.location?.name,
+      },
+      Availablity_to_start:
+        !jobsData?.Availablity_to_start ||
+        jobsData?.Availablity_to_start === 'Invalid date'
+          ? moment(formData.startDate).format('MMM Do YY')
+          : jobsData?.Availablity_to_start,
+      willing_to_relocate: statedata.isBackgound ? 1 : 0,
+    };
+
+    // Optional: Add current location only if exists
+    if (formData.currentLocation) {
+      payload.current_location = {
+        lat: formData.currentLocation?.latitude,
+        lng: formData.currentLocation?.longitude,
+        name: formData.currentLocation?.name,
+      };
+    }
+
     console.log('🚀 ~ onSubmit ~ payload:', payload);
     dispatch(
       PREFERABLE_LOCATION_API.request({
@@ -210,9 +256,13 @@ const Where = ({navigation, route}) => {
             />
           </ButtonView>
           <ButtonView
-            onPress={() =>
-              setStateData(prev => ({...prev, isBackgound: false}))
-            }
+            onPress={() => {
+              setStateData(prev => ({...prev, isBackgound: false}));
+              setFormData(prev => ({
+                ...prev,
+                errors: {...prev.errors, currentLocation: ''},
+              }));
+            }}
             style={[
               styles.button,
               {
@@ -231,17 +281,36 @@ const Where = ({navigation, route}) => {
       </View>
 
       <CustomDropdown
-        isDarkMode={isDarkMode}
-        value={formData.location.name}
-        label="Location"
-        data={statedata.getState}
-        selectedValue={value =>
+        onPressValue={() => {
           setFormData(prev => ({
             ...prev,
-            location: value,
-            errors: {...prev.errors, location: ''},
+            locationPop: true,
+          }));
+        }}
+        type="location"
+        isDarkMode={isDarkMode}
+        value={formData?.location?.name || ''}
+        label="Location"
+      />
+
+      <GooglePlacesInput
+        visible={formData.locationPop}
+        onClose={() =>
+          setFormData(prev => ({
+            ...prev,
+            locationPop: false,
           }))
         }
+        containerstyle={{width: ms(330)}}
+        placeholder="Enter Location"
+        onPlaceSelected={(index, text) => {
+          setFormData(prev => ({
+            ...prev,
+            locationPop: false,
+            location: text,
+            errors: {...prev.errors, location: ''},
+          }));
+        }}
       />
       {formData.errors.location ? (
         <ScaleText
@@ -251,19 +320,38 @@ const Where = ({navigation, route}) => {
       ) : null}
 
       {statedata.isBackgound && (
-        <CustomDropdown
-          isDarkMode={isDarkMode}
-          value={formData.currentLocation.name}
-          label="Where are you currently located?"
-          data={statedata.getState}
-          selectedValue={value =>
-            setFormData(prev => ({
-              ...prev,
-              currentLocation: value,
-              errors: {...prev.errors, currentLocation: ''},
-            }))
-          }
-        />
+        <>
+          <GooglePlacesInput
+            visible={formData.currentLocationPopup}
+            onClose={() =>
+              setFormData(prev => ({
+                ...prev,
+                currentLocationPopup: false,
+              }))
+            }
+            containerstyle={{width: ms(330)}}
+            placeholder="Where are you currently located?"
+            onPlaceSelected={(index, text) => {
+              setFormData(prev => ({
+                ...prev,
+                currentLocationPopup: false,
+                currentLocation: text,
+                errors: {...prev.errors, currentLocation: ''},
+              }));
+            }}
+          />
+          <CustomDropdown
+            onPressValue={() => {
+              setFormData(prev => ({
+                ...prev,
+                currentLocationPopup: true,
+              }));
+            }}
+            isDarkMode={isDarkMode}
+            value={formData?.currentLocation?.name || ''}
+            label="Where are you currently located?"
+          />
+        </>
       )}
       {formData.errors.currentLocation ? (
         <ScaleText

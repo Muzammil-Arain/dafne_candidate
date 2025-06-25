@@ -64,6 +64,7 @@ import {
 } from '../../ducks/app';
 import {useDispatch} from 'react-redux';
 import {useFocusEffect} from '@react-navigation/native';
+import GooglePlacesInput from '../../common/GooglePlace';
 
 const MyBackground = ({navigation, route}) => {
   const userData = route?.params?.data;
@@ -170,6 +171,8 @@ const MyBackground = ({navigation, route}) => {
     getCertificate: [],
     getDegree: [],
     fullscreenisLoading: false,
+    setPopupVisible: false,
+    showLocationPop: false,
   });
   console.log('🚀 ~ MyBackground ~ statedata:', statedata);
 
@@ -195,7 +198,12 @@ const MyBackground = ({navigation, route}) => {
             name: item?.job_title || '',
           },
           companyName: item?.company_name || '',
-          location: item?.location || '',
+          location:
+            {
+              latitude: item.location?.lat,
+              longitude: item.location?.lng,
+              name: item.location?.name,
+            } || {},
           startDate: item?.start_date || '',
           endDate: item?.end_date || '',
           still_working: item?.still_working == 1,
@@ -502,7 +510,11 @@ const MyBackground = ({navigation, route}) => {
       employment_type_id: Experience.map(exp => exp.employmentType.id),
       job_title_id: Experience.map(exp => exp.jobTitle.id),
       company_name: Experience.map(exp => exp.companyName),
-      location: Experience.map(exp => exp.location),
+      location: Experience.map(exp => ({
+        lat: exp.location?.latitude,
+        lng: exp.location?.longitude,
+        name: exp.location?.name,
+      })),
       start_date: Experience.map(exp => exp.startDate),
       end_date: Experience.map(
         exp => (exp.still_working == '0' && exp.endDate) || '',
@@ -708,15 +720,25 @@ const MyBackground = ({navigation, route}) => {
   const experiencesetupMemo = useMemo(() => {
     if (statedata.currentStep !== 0) return null;
 
+    const updateExperienceField = (index, field, value) => {
+      setStateData(prev => {
+        const updatedExperience = [...prev.Experience];
+        updatedExperience[index][field] = value;
+        return {...prev, Experience: updatedExperience};
+      });
+    };
+
     const handleAddExperience = index => {
       const experienceArray = statedata?.Experience || [];
       const lastItem = experienceArray[experienceArray.length - 1];
+      console.log('🚀 ~ experiencesetupMemo ~ lastItem:', lastItem);
 
       const invalidField = Object.values(lastItem)?.filter(
         val => typeof val === 'string' && !val.trim(),
       );
+      console.log('🚀 ~ experiencesetupMemo ~ invalidField:', invalidField);
 
-      if (invalidField.length > 0) {
+      if (invalidField.length > 1) {
         Util.showMessage(
           'Please fill all fields before adding a new experience.',
         );
@@ -855,19 +877,33 @@ const MyBackground = ({navigation, route}) => {
               }
             />
 
-            <TextInputCustom
-              optional={true}
+            <CustomDropdown
+            mainContainerStyle={{width:ms(280)}}
+              onPressValue={() => {
+                setStateData(prev => ({
+                  ...prev,
+                  showLocationPop: expIndex,
+                }));
+              }}
               isDarkMode={isDarkMode}
-              placeholder="Enter Location"
-              label="Location"
-              value={experience.location}
-              onChangeText={text =>
-                setStateData(prev => {
-                  const updated = [...prev.Experience];
-                  updated[expIndex].location = text;
-                  return {...prev, Experience: updated};
-                })
+              value={experience.location.name}
+              label="Enter Location"
+            />
+
+            <GooglePlacesInput
+              expIndex={expIndex}
+              visible={statedata.showLocationPop === expIndex}
+              onClose={() =>
+                setStateData(prev => ({
+                  ...prev,
+                  showLocationPop: false,
+                }))
               }
+              containerstyle={{width: ms(330)}}
+              placeholder="Enter Location"
+              onPlaceSelected={(index, text) => {
+                updateExperienceField(expIndex, 'location', text);
+              }}
             />
 
             <View style={styles.row}>
@@ -1314,7 +1350,7 @@ const MyBackground = ({navigation, route}) => {
     };
 
     const handleRemoveVisa = (index, item) => {
-      console.log("🚀 ~ handleRemoveVisa ~ index:", index,item.id)
+      console.log('🚀 ~ handleRemoveVisa ~ index:', index, item.id);
       if (item.id) {
         const formData = new FormData();
         formData.append('passport_visa_id', item.id);

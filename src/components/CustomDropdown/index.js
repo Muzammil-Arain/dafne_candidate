@@ -20,6 +20,7 @@ const CustomDropdown = ({
   isDarkMode,
   keyboardType,
   minimumDate,
+  onPressValue,
 }) => {
   const [modal, setModal] = useState(false);
 
@@ -44,7 +45,11 @@ const CustomDropdown = ({
       <ButtonView
         style={[mainContainerStyle]}
         onPress={() => {
-          setModal(true);
+          if (typeof onPressValue === 'function') {
+            onPressValue(); // pass argument if needed
+          } else {
+            setModal(true);
+          }
         }}>
         <TextInput
           keyboardType={keyboardType}

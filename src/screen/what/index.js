@@ -33,7 +33,7 @@ const What = ({navigation, route}) => {
   const dispatch = useDispatch();
   const {perID, isFromKeyFalse} = route?.params;
   console.log('🚀 ~ What ~ perID:', perID);
-  console.log("🚀 ~ What ~ isFromKeyFalse:", isFromKeyFalse)
+  console.log('🚀 ~ What ~ isFromKeyFalse:', isFromKeyFalse);
   const [statedata, setStateData] = useState({
     isBackgound: true,
     relevantJob: true,
@@ -253,6 +253,7 @@ const What = ({navigation, route}) => {
     if (!validateFields()) return;
 
     const {and, between, currency, negotiable} = values;
+    console.log("🚀 ~ What ~ values:", values)
     const formdata = {
       preferable_industry_id: perID,
       industry_id: statedata.selectedindustry?.id,
@@ -264,22 +265,29 @@ const What = ({navigation, route}) => {
       offer_from_other_industries: statedata.isBackgound ? 1 : 0,
       current_location: 1,
       location_for_job: 1,
-      ...(between && {salary_between: between}),
-      ...(and && {salary_and: and}),
-      ...(statedata.frequencyvalue?.name && {
-        salary_frequency: statedata.frequencyvalue.name,
-      }),
-      ...(statedata.currencyvalue?.id && {
-        salary_currency: statedata.currencyvalue.id,
-      }),
     };
 
+    if (between !== 'false') {
+      formdata.salary_between = between;
+    }
+
+    if (and!== 'false') {
+      formdata.salary_and = and;
+    }
+
+    if (statedata.frequencyvalue?.name) {
+      formdata.salary_frequency = statedata.frequencyvalue.name;
+    }
+
+    if (statedata.currencyvalue?.id) {
+      formdata.salary_currency = statedata.currencyvalue.id;
+    }
 
     dispatch(
       PREFERABLE_INDUSTRY_API.request({
         payloadApi: formdata,
         cb: res => {
-          if (!isFromKeyFalse) {
+          if (isFromKeyFalse) {
             NavigationService.navigate(StackNav.Where, {
               key: true,
               perID: perID,

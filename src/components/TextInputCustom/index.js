@@ -18,6 +18,7 @@ const TextInputCustom = ({
   value,
   isDarkMode,
   keyboardType,
+  editable,
   optional = false, // Add an optional prop
   onChangeText,     // Callback for directly handling text changes
 }) => {
@@ -25,6 +26,7 @@ const TextInputCustom = ({
 
   const renderInput = ({onChange, value}) => (
     <TextInput
+    editable={editable}
     keyboardType={keyboardType}
       textAlignVertical={textAlignVertical}
       label={label}

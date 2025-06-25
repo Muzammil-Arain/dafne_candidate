@@ -52,6 +52,7 @@ import {
 } from '../../ducks/app';
 import {useDispatch} from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import GooglePlacesInput from '../../common/GooglePlace';
 
 const AuthProfile = ({navigation}) => {
   const dispatch = useDispatch();
@@ -146,6 +147,7 @@ const AuthProfile = ({navigation}) => {
     getLicance: [],
     getCertificate: [],
     getDegree: [],
+    showLocationPop: false,
   });
 
   useLayoutEffect(() => {
@@ -450,6 +452,14 @@ const AuthProfile = ({navigation}) => {
     });
   };
 
+  const updateExperienceField = (index, field, value) => {
+    setStateData(prev => {
+      const updatedExperience = [...prev.Experience];
+      updatedExperience[index][field] = value;
+      return {...prev, Experience: updatedExperience};
+    });
+  };
+
   const handlePassportFieldChange = (expIndex, field, value) => {
     setStateData(prev => {
       const UpdatePassportFiled = [...prev.Passport];
@@ -543,7 +553,11 @@ const AuthProfile = ({navigation}) => {
       employment_type_id: Experience.map(exp => exp.employmentType.id),
       job_title_id: Experience.map(exp => exp.jobTitle.id),
       company_name: Experience.map(exp => exp.companyName),
-      location: Experience.map(exp => exp.location),
+      location: Experience.map(exp => ({
+        lat: exp.location?.latitude,
+        lng: exp.location?.longitude,
+        name: exp.location?.name,
+      })),
       start_date: Experience.map(exp => exp.startDate),
       end_date: Experience.map(exp => exp.endDate || ''),
       still_working: Experience.map(exp => (exp.still_working ? '1' : '0')),
@@ -555,7 +569,9 @@ const AuthProfile = ({navigation}) => {
       sic_time: Experience.map(exp => exp.sictime),
       require_type_rating: Experience.map(exp => exp.typerate?.name),
     };
+    console.log(handlepayload, 'handlepayload Experience');
 
+    // return;
     setStateData(prev => ({...prev, isLoading: 'WORK_EXPERIENCE'}));
     dispatch(
       WORK_EXPERIENCE_API.request({
@@ -761,28 +777,9 @@ const AuthProfile = ({navigation}) => {
     );
   };
 
-  // const handleGetStates = async value => {
-  //   console.log('====================================');
-  //   console.log(value, 'valuevaluevaluevalue');
-  //   console.log('====================================');
-  //   dispatch(
-  //     GET_STATE_API.request({
-  //       payloadApi: {},
-  //       params: value?.id,
-  //       cb: data => {
-  //         const dropdowndata = data;
-  //         const sorted = [...dropdowndata].sort((a, b) =>
-  //           a.name.localeCompare(b.name),
-  //         );
-
-  //         setStateData(prev => ({...prev, getstatedata: sorted}));
-  //       },
-  //     }),
-  //   );
-  // };
-
   const experiencesetup = index => {
     const renderExperienceSection = (experience, expIndex) => {
+      console.log('🚀 ~ renderExperienceSection ~ expIndex:', expIndex);
       console.log('🚀 ~ renderExperienceSection ~ experience:', experience);
       const isSelected = statedata.selectedExpId === expIndex;
       return (
@@ -860,20 +857,7 @@ const AuthProfile = ({navigation}) => {
               data={statedata.getCountry}
             /> */}
 
-            {statedata?.getstatedata && (
-              <CustomDropdown
-                isDarkMode={isDarkMode}
-                value={experience?.state?.name}
-                label="Enter State Name"
-                selectedValue={value => {
-                  handleGetStates(value);
-                  handleFieldChange(expIndex, 'State', value);
-                }}
-                data={statedata.getstatedata}
-              />
-            )}
-
-            <TextInputCustom
+            {/* <TextInputCustom
               optional={true}
               isDarkMode={isDarkMode}
               placeholder="Enter Location"
@@ -886,6 +870,34 @@ const AuthProfile = ({navigation}) => {
                   return {...prev, Experience: updatedExperience};
                 })
               }
+            /> */}
+
+            <CustomDropdown
+              onPressValue={() => {
+                setStateData(prev => ({
+                  ...prev,
+                  showLocationPop: expIndex,
+                }));
+              }}
+              isDarkMode={isDarkMode}
+              value={experience.location.name}
+              label="Enter Location"
+            />
+
+            <GooglePlacesInput
+              expIndex={expIndex}
+              visible={statedata.showLocationPop === expIndex}
+              onClose={() =>
+                setStateData(prev => ({
+                  ...prev,
+                  showLocationPop: false,
+                }))
+              }
+              containerstyle={{width: ms(330)}}
+              placeholder="Enter Location"
+              onPlaceSelected={(index, text) => {
+                updateExperienceField(expIndex, 'location', text);
+              }}
             />
 
             <View style={styles.row}>
@@ -941,7 +953,7 @@ const AuthProfile = ({navigation}) => {
               </View>
             )}
           </View>
-          {experience.jobTitle.name == 'PILOT' && (
+          {experience.jobTitle.name?.toLowerCase() === 'pilot' && (
             <View style={{}}>
               <View
                 style={{
@@ -1156,7 +1168,11 @@ const AuthProfile = ({navigation}) => {
 
       return (
         <View style={styles.formContainer}>
-          <View>{statedata.Experience.map(renderExperienceSection)}</View>
+          <View>
+            {statedata.Experience.map((val, ind) =>
+              renderExperienceSection(val, ind),
+            )}
+          </View>
           <ButtonView
             onPress={() => handleAddExperience(statedata.selectedExpId)}>
             <Text style={styles.addButtonText}>Add +</Text>

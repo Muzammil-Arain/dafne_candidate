@@ -20,6 +20,7 @@ const Setting = ({navigation}) => {
   const dispatch = useDispatch();
   const [state, setState] = useState({
     logoutModal: false,
+    delete: false,
     logoutLoading: false,
   });
 
@@ -57,7 +58,6 @@ const Setting = ({navigation}) => {
     const keysToKeep = [LocalStoragekey.LOGIN_USER]; // Keep LOGIN_USER
     const allKeys = await AsyncStorage.getAllKeys();
     const keysToRemove = allKeys.filter(key => !keysToKeep.includes(key));
-    console.log('🚀 ~ handleLogOut ~ keysToRemove:', keysToRemove);
 
     await AsyncStorage.multiRemove(keysToRemove);
 
@@ -77,6 +77,16 @@ const Setting = ({navigation}) => {
       index: 0,
       routes: [{name: 'Login'}],
     });
+  };
+
+  const handleDeleteAccount = async () => {
+    setState(prev => ({...prev, delete: false}));
+    // Clear all AsyncStorage except LOGIN_USER
+    const keysToKeep = [LocalStoragekey.LOGIN_USER];
+    const allKeys = await AsyncStorage.getAllKeys();
+    const keysToRemove = allKeys.filter(key => !keysToKeep.includes(key));
+    await AsyncStorage.multiRemove(keysToRemove);
+    datahandler.setisNewProject(null);
   };
 
   return (
@@ -107,6 +117,17 @@ const Setting = ({navigation}) => {
             />
           </ButtonView>
         </View>
+        {/* <View style={styles.optionContainer}>
+          <ButtonView
+            onPress={() => setState(prev => ({...prev, delete: true}))}>
+            <ScaleText
+              isDarkMode={isDarkMode}
+              color={Colors.Red}
+              fontSize={ms(15)}
+              text={'Delete Account'}
+            />
+          </ButtonView>
+        </View> */}
       </View>
       <PopupModal
         isModalVisible={state.logoutModal}
@@ -121,6 +142,21 @@ const Setting = ({navigation}) => {
         title={'Logout Confirmation'}
         description={
           'Are you sure you want to log out? This will end your current session.'
+        }
+      />
+      <PopupModal
+        isModalVisible={state.delete}
+        showButtons={true}
+        ButtonTitleOne={'Yes'}
+        ButtonTitleTwo={'No'}
+        ButtonOneLoading={state.logoutLoading}
+        ButtonOnePress={() => handleDeleteAccount()}
+        ButtonTwoPress={() => {
+          setState(prev => ({...prev, delete: false}));
+        }}
+        title={'Delete Account'}
+        description={
+          'Are you sure you want to delete your account? This action is permanent and cannot be undone.'
         }
       />
     </Background>

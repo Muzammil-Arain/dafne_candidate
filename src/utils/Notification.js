@@ -5,6 +5,7 @@ import PushNotificationIOS from '@react-native-community/push-notification-ios';
 import {LocalStoragekey} from '../config/AppConfig';
 import {PermissionsAndroid, Platform} from 'react-native';
 import {SEND_NOTIFICATION_API} from '../ducks/app';
+import Util from './Util';
 
 export async function RequestUserPermission() {
   const authStatus = await messaging().requestPermission();
@@ -35,7 +36,6 @@ const getFCMToken = async () => {
   }
 };
 
-
 export const requestNotificationPermission = async () => {
   if (Platform.OS === 'android') {
     const androidVersion = parseInt(Platform.Version, 10);
@@ -45,7 +45,9 @@ export const requestNotificationPermission = async () => {
         const permission = PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS;
 
         if (!permission) {
-          console.warn('POST_NOTIFICATIONS permission is not defined on this Android version.');
+          console.warn(
+            'POST_NOTIFICATIONS permission is not defined on this Android version.',
+          );
           return;
         }
 
@@ -54,7 +56,8 @@ export const requestNotificationPermission = async () => {
         if (!permissionStatus) {
           const granted = await PermissionsAndroid.request(permission, {
             title: 'Notification Permission',
-            message: 'This app needs access to your notifications to provide updates.',
+            message:
+              'This app needs access to your notifications to provide updates.',
             buttonNeutral: 'Ask Me Later',
             buttonNegative: 'Cancel',
             buttonPositive: 'OK',
@@ -74,7 +77,9 @@ export const requestNotificationPermission = async () => {
         console.error('Notification Permission Error:', err);
       }
     } else {
-      console.log('Android version is below 13, no need to request notification permission.');
+      console.log(
+        'Android version is below 13, no need to request notification permission.',
+      );
     }
   }
 };
@@ -89,6 +94,7 @@ export const handleSendNotification = (dispatch, userid, title, message) => {
     SEND_NOTIFICATION_API.request({
       payloadApi: formData,
       cb: response => {
+        // Util.showMessage(response?.message || '');
         console.log('🚀 ~ handleSendNotification ~ response:', response);
       },
     }),
