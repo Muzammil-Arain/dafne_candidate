@@ -258,9 +258,15 @@ const AuthPictureUpload = ({navigation, route}) => {
                 borderRadius: 5,
                 marginRight: ms(10),
               }}
-              onPress={() => setTextLines(!textLines)}>
+              onPress={() => {
+                if(textLines == 1){
+                  setTextLines(2)
+                } else{
+                  setTextLines(1)
+                }
+              }}>
               <VectorIcon
-                name={textLines ? 'plus' : 'minus'}
+                name={textLines == 1 ? 'plus' : 'minus'}
                 type={'Entypo'}
                 color={Colors.White}
                 size={ms(17)}

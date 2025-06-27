@@ -17,7 +17,7 @@ import geoCode from '../src/utils/geoCode';
 import {GalleryPicker} from './components';
 import NetworkInfo from './utils/NetworkInfo';
 import datahandler from './helper/datahandler';
-import {requestNotificationPermission, RequestUserPermission} from './utils/Notification';
+import {NotificationListner, requestNotificationPermission, RequestUserPermission} from './utils/Notification';
 import { startNotificationListener } from './utils/NotificationListner';
 
 LogBox.ignoreLogs(['Warning: ...']);
@@ -39,6 +39,7 @@ const App = () => {
     configureStore(onStoreConfigure);
     startNotificationListener();
     requestNotificationPermission();
+    NotificationListner();
     const initialColorScheme = Appearance.getColorScheme();
     const darkMode = initialColorScheme === 'dark';
     console.log('Initial color scheme:', darkMode);

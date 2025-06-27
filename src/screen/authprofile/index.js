@@ -215,7 +215,12 @@ const AuthProfile = ({navigation}) => {
           name: item?.jobTitle?.job_title || '',
         },
         companyName: item?.companyName || '',
-        location: item?.location || '',
+        location:
+          {
+            lat: item.location?.lat,
+            lng: item.location?.lng,
+            name: item.location?.name,
+          } || {},
         startDate: item?.startDate || '',
         endDate: item?.endDate || '',
         still_working: item?.currently_working == 1,

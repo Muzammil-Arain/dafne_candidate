@@ -1,4 +1,10 @@
-import React, {useState, useCallback, memo, useLayoutEffect} from 'react';
+import React, {
+  useState,
+  useCallback,
+  memo,
+  useLayoutEffect,
+  useEffect,
+} from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -62,6 +68,9 @@ const meetingOptions = [
 
 const InterviewInvitations = ({navigation, route}) => {
   const InterViewData = route?.params?.data;
+  console.log('🚀 ~ InterviewInvitations ~ InterViewData:', InterViewData);
+  const isDisabled = route?.params?.type;
+
   const [statedata, setStateData] = useState({
     interviewType: 'Video Call',
     interviewTime: null,
@@ -70,6 +79,7 @@ const InterviewInvitations = ({navigation, route}) => {
   const toast = useToast();
   const loginData = useSelector(getUserData);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [interviewTime, setInterViewTime] = useState(null);
   const [filteredSlots, setFilteredSlots] = useState([]);
 
   const [isloading, setIsLoading] = useState(false);
@@ -88,6 +98,26 @@ const InterviewInvitations = ({navigation, route}) => {
       value: InterViewData?.project?.requirement?.start_date,
     },
   ];
+
+  useEffect(() => {
+    getBookedSlot();
+  }, []);
+
+  const getBookedSlot = async () => {
+    const bookedSlots = InterViewData?.available_slots.filter(
+      item => item.status === 'booked',
+    );
+    bookedSlots.forEach(slot => {
+      const date = slot.start_time.split(' ')[0];
+      const startTime = slot.start_time.split(' ')[1];
+      const endTime = slot.end_time.split(' ')[1];
+
+      console.log(`📅 Date: ${date}`);
+      setSelectedDate(date);
+      setInterViewTime(`${startTime} - ${endTime}`);
+      console.log(`🕒 Time: ${startTime} - ${endTime}`);
+    });
+  };
 
   const availableDates = [
     ...new Set(
@@ -614,49 +644,21 @@ const InterviewInvitations = ({navigation, route}) => {
         <ScaleText
           fontSize={ms(15)}
           color={isDarkMode ? Colors.White : Colors.Black}
-          text={'Please Select Your Time'}
+          text={!isDisabled ? 'Your Time' : 'Please Select Your Time'}
         />
       </View>
 
       <View style={styles.timeSelectionContainer}>
         {filteredSlots.length > 0 ? (
           <View style={styles.slotsContainer}>
-            {/* {filteredSlots.map((time, index) => (
-              <ButtonView onPress={() => handleTimeSelection(time)} key={index}>
-                <View
-                  style={[
-                    styles.timeButton,
-                    {
-                      backgroundColor:
-                        statedata.interviewTime?.id === time.id && isDarkMode
-                          ? Colors.more_black[900]
-                          : statedata.interviewTime?.id === time.id
-                          ? Colors.Yellow
-                          : isDarkMode
-                          ? Colors.Back_70
-                          : Colors.White,
-                    },
-                  ]}>
-                  <Text
-                    style={[
-                      styles.timeText,
-                      {
-                        color:
-                          statedata.interviewTime?.id === time.id
-                            ? Colors.White
-                            : Colors.Yellow,
-                      },
-                    ]}>
-                    {formatSlotTime(time.start_time, time.end_time)}
-                  </Text>
-                </View>
-              </ButtonView>
-            ))} */}
             <FlatList
               data={filteredSlots}
-                numColumns={2}
+              numColumns={2}
               columnWrapperStyle={{justifyContent: 'space-between'}}
-              contentContainerStyle={{paddingHorizontal: 16, paddingBottom: 20}}
+              contentContainerStyle={{
+                paddingHorizontal: 16,
+                paddingBottom: 20,
+              }}
               keyExtractor={(item, index) =>
                 item.id?.toString() || index.toString()
               }
@@ -694,29 +696,47 @@ const InterviewInvitations = ({navigation, route}) => {
         ) : null}
       </View>
 
-      <AppButton
-        disabled={!statedata?.interviewTime?.id}
-        type={'ACCEPT_INVITATIONS'}
-        onPress={() => handleAccept()}
-        BackgroundColor={isDarkMode ? Colors.more_black[800] : Colors.Black}
-        title={'Submit'}
-      />
+      {!isDisabled &&<View
+        style={[
+          styles.timeButton,
+          {backgroundColor: Colors.DarkYellow,alignSelf:'center',width:ms(200)},
+        ]}>
+        <Text style={[styles.timeText, {color: Colors.White}]}>
+          {interviewTime}
+        </Text>
+      </View>}
+
+      {isDisabled && (
+        <AppButton
+          disabled={!statedata?.interviewTime?.id}
+          type={'ACCEPT_INVITATIONS'}
+          onPress={() => handleAccept()}
+          BackgroundColor={isDarkMode ? Colors.more_black[800] : Colors.Black}
+          title={'Submit'}
+        />
+      )}
       <View style={styles.actionButtons}>
-        <ButtonView onPress={() => handleReject()}>
-          <View style={[styles.submitButton, {width: width * 0.3}]}>
-            {rejectloading ? (
-              <ActivityIndicator size={'small'} color={Colors.DarkYellow} />
-            ) : (
-              <ScaleText
-                isDarkMode={isDarkMode}
-                color={Colors.Black}
-                text={'Decline'}
-              />
-            )}
-          </View>
-        </ButtonView>
+        {isDisabled && (
+          <ButtonView onPress={() => handleReject()}>
+            <View style={[styles.submitButton, {width: width * 0.3}]}>
+              {rejectloading ? (
+                <ActivityIndicator size={'small'} color={Colors.DarkYellow} />
+              ) : (
+                <ScaleText
+                  isDarkMode={isDarkMode}
+                  color={Colors.Black}
+                  text={'Decline'}
+                />
+              )}
+            </View>
+          </ButtonView>
+        )}
         <ButtonView onPress={() => handleCreateChatRoom()}>
-          <View style={[styles.submitButton, {width: width * 0.5}]}>
+          <View
+            style={[
+              styles.submitButton,
+              {width: !isDisabled ? ms(350) : width * 0.5},
+            ]}>
             {isloading ? (
               <ActivityIndicator size={'small'} color={Colors.DarkYellow} />
             ) : (

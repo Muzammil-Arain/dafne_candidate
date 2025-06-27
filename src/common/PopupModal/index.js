@@ -134,7 +134,7 @@ const styles = ScaledSheet.create({
     fontSize: '12@ms',
     lineHeight: '15@ms',
     textAlign: 'center',
-    color: Colors.borderColor,
+    color: Colors.Black_02,
     textTransform: 'capitalize',
     marginBottom: '10@ms',
   },

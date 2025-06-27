@@ -19,22 +19,38 @@ const TextInputCustom = ({
   isDarkMode,
   keyboardType,
   editable,
+  issalary = false,
   optional = false, // Add an optional prop
-  onChangeText,     // Callback for directly handling text changes
+  onChangeText, // Callback for directly handling text changes
 }) => {
+  console.log("🚀 ~ issalary:", issalary)
   const textColor = isDarkMode ? Colors.Whiite_CC : Colors.Black_21;
+  const formatCurrency = (value, currency = 'USD') => {
+  const cleaned = value.replace(/[^0-9]/g, '');
+
+  if (!cleaned) return '';
+
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+  }).format(cleaned);
+};
 
   const renderInput = ({onChange, value}) => (
     <TextInput
-    editable={editable}
-    keyboardType={keyboardType}
+      editable={editable}
+      keyboardType={keyboardType}
       textAlignVertical={textAlignVertical}
       label={label}
       multiline={multiline}
       value={value}
       onChangeText={text => {
         if (onChange) {
-          onChange(text); // Controlled by react-hook-form
+          if (issalary) {
+            const formatted = formatCurrency(text, 'USD');
+            onChange(formatted);
+          }else{
+            onChange(text); // Controlled by react-hook-form
+          }
         }
         if (onChangeText) {
           onChangeText(text); // External callback for direct usage
@@ -47,7 +63,9 @@ const TextInputCustom = ({
       style={[
         cuntomStyle,
         {
-          backgroundColor: isDarkMode ? Colors.more_black[900] : Colors.Whiite_FC,
+          backgroundColor: isDarkMode
+            ? Colors.more_black[900]
+            : Colors.Whiite_FC,
           fontSize: ms(12),
           color: textColor,
         },
@@ -96,3 +114,6 @@ const styles = ScaledSheet.create({
     marginVertical: '10@ms',
   },
 });
+ 
+
+

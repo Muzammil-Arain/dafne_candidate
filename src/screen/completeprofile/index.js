@@ -47,7 +47,7 @@ const CompleteProfile = ({navigation, route}) => {
       PROFILE_PERCENTAGE_API.request({
         payloadApi: formData,
         cb: res => {
-          NavigationService.navigate('AppStack', {
+          NavigationService.reset('AppStack', {
             key: true,
           });
         },

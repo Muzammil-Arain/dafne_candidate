@@ -1,17 +1,20 @@
 import React, {useRef, useState, useEffect} from 'react';
 import {
-  TextInput,
   View,
   Modal,
   TouchableOpacity,
-  Text,
   StyleSheet,
+  SafeAreaView,
+  PermissionsAndroid,
+  Platform,
+  Text,
+  ScrollView,
 } from 'react-native';
 import {GooglePlacesAutocomplete} from 'react-native-google-places-autocomplete';
-import {ms, ScaledSheet} from 'react-native-size-matters';
-import {Colors, Fonts} from '../../theme';
-import {SafeAreaView} from 'react-native';
+import Geolocation from '@react-native-community/geolocation';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import {ms} from 'react-native-size-matters';
+import { Colors } from '../../theme';
 
 const GooglePlacesPopup = ({
   placeholder = 'Search',
@@ -22,17 +25,39 @@ const GooglePlacesPopup = ({
   onClose,
   expIndex,
 }) => {
-  console.log("🚀 ~ expIndex GooglePlacesPopup:", expIndex)
   const ref = useRef();
   const [inputValue, setInputValue] = useState(value);
 
-  // Sync with external value
   useEffect(() => {
     setInputValue(value);
     if (ref.current?.setAddressText && value) {
       ref.current.setAddressText(value);
     }
   }, [value]);
+
+  useEffect(() => {
+    if (visible) {
+      requestLocationPermission();
+    }
+  }, [visible]);
+
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: 'Location Permission',
+          message: 'This app needs access to your location.',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        },
+      );
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        console.warn('Location permission denied');
+      }
+    }
+  };
 
   const handlePlaceSelect = (data, details) => {
     const locationName = data?.description;
@@ -49,113 +74,123 @@ const GooglePlacesPopup = ({
       });
     }
 
-    onClose?.(); // close the popup after selection
+    onClose?.();
   };
-
-  const isDarkMode = false;
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <SafeAreaView
-        style={{
-          flex: 1,
-          backgroundColor: Colors.White,
-        }}>
-        <View
-          style={[
-            styles.modalDropDownStyle,
-            {
-              backgroundColor: isDarkMode
-                ? Colors.more_black[900]
-                : Colors.White,
-            },
-          ]}>
+      <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}>
+        <View style={styles.modalDropDownStyle}>
           <TouchableOpacity
-            onPress={() => onClose?.()}
-            style={{
-              alignSelf: 'flex-end',
-              marginBottom: 10,
-              marginRight:ms(20),
-            }}>
-            <AntDesign
-              name="closecircleo"
-              color={isDarkMode ? Colors.more_black[800] : Colors.Black_21}
-              size={ms(22)}
-            />
+            onPress={onClose}
+            style={{alignSelf: 'flex-end', marginBottom: 10, marginRight: 20}}>
+            <AntDesign name="closecircleo" color="#000" size={22} />
           </TouchableOpacity>
-          <View style={styles.modalOverlay}>
-            <View style={styles.popupContainer}>
-              <GooglePlacesAutocomplete
-                ref={ref}
-                placeholder={placeholder}
-                fetchDetails={true}
-                onPress={handlePlaceSelect}
-                query={{
-                  key: 'AIzaSyBhYoprbLYQdKzaQVAMj-4rr84DpTj7Uv0',
-                  language: 'en',
-                  types: 'geocode',
-                }}
-                textInputProps={{
-                  value: inputValue,
-                  onChangeText: setInputValue,
-                  placeholderTextColor: placeholderTextColor,
-                }}
-                styles={{
-                  textInput: styles.textInput,
-                  container: styles.autoCompleteContainer,
-                }}
-                enablePoweredByContainer={false}
-                nearbyPlacesAPI="GooglePlacesSearch"
-                debounce={300}
-                currentLocation={true}
-                currentLocationLabel="Current location"
-                enableHighAccuracyLocation={true}
-              />
-            </View>
-          </View>
+
+          {/* <GooglePlacesAutocomplete
+            ref={ref}
+            placeholder={placeholder}
+            fetchDetails={true}
+            // onPress={handlePlaceSelect}
+            onPress={(data, details = null) => {
+              console.log(data, details);
+            }}
+            query={{
+              key: 'AIzaSyBhYoprbLYQdKzaQVAMj-4rr84DpTj7Uv0',
+              language: 'en',
+              types: 'geocode',
+            }}
+            textInputProps={{
+              value: inputValue,
+              onChangeText: setInputValue,
+              placeholderTextColor: placeholderTextColor,
+            }}
+            styles={{
+              textInput: styles.textInput,
+              container: styles.autoCompleteContainer,
+            }}
+            enablePoweredByContainer={false}
+            nearbyPlacesAPI="GooglePlacesSearch"
+            debounce={300}
+            currentLocation={true}
+            currentLocationLabel="Use Current Location"
+          /> */}
+          <ScrollView keyboardShouldPersistTaps="always">
+            <GooglePlacesAutocomplete
+              placeholder="Search location"
+              fetchDetails={true}
+              onFail={err => console.error('Places error', err)}
+              onPress={(data, details = null) => {
+                console.log('DATA:', data);
+                console.log('DETAILS:', details);
+                if (!details?.geometry?.location) {
+                  console.warn('No location details');
+                  return;
+                }
+                const {lat, lng} = details.geometry.location;
+                onPlaceSelected(expIndex, {
+                  name: data.description,
+                  latitude: lat,
+                  longitude: lng,
+                });
+                onClose();
+              }}
+              query={{
+                key: 'AIzaSyBhYoprbLYQdKzaQVAMj-4rr84DpTj7Uv0',
+                language: 'en',
+              }}
+              enablePoweredByContainer={false}
+              textInputProps={{
+                value: inputValue,
+                onChangeText: setInputValue,
+                placeholderTextColor: placeholderTextColor,
+              }}
+              listViewDisplayed={false}
+              keepResultsAfterBlur={true}
+              GooglePlacesDetailsQuery={{fields: 'formatted_address,geometry'}}
+              currentLocation={true}
+              currentLocationLabel="Current location"
+              nearbyPlacesAPI="GooglePlacesSearch"
+              debounce={300}
+              styles={{
+                textInput: styles.textInput,
+                container: styles.autoCompleteContainer,
+                container: {flex: 0},
+                textInput: {
+                  backgroundColor:Colors.Whiite_DC,
+                  color: '#222', // 👈 Set text color for dark mode
+                  borderRadius: 5,
+                  paddingHorizontal: 10,
+                },
+                description: {
+                  color: '#222', // 👈 dropdown item text color
+                },
+              }}
+            />
+          </ScrollView>
         </View>
       </SafeAreaView>
     </Modal>
   );
 };
 
-const styles = ScaledSheet.create({
-  modalOverlay: {
+const styles = StyleSheet.create({
+  modalDropDownStyle: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  popupContainer: {
-    height: '100%',
-    width: '100%',
-    backgroundColor: Colors.White,
-    borderRadius: 10,
-    padding: 16,
+    padding: ms(20),
+    backgroundColor: '#fff',
   },
   autoCompleteContainer: {
     flex: 0,
   },
   textInput: {
-    backgroundColor: Colors.White_EB,
-    fontSize: '13@ms',
-    fontFamily: Fonts.type.Roman,
+    backgroundColor: '#f1f1f1',
+    fontSize: 14,
     height: 50,
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: Colors.Border,
+    borderColor: '#ccc',
     paddingHorizontal: 10,
-  },
-  closeButton: {
-    marginTop: 10,
-    alignSelf: 'flex-end',
-  },
-  closeText: {
-    color: 'red',
-    fontSize: 14,
-  },
-  modalDropDownStyle: {
-    flex: 1,
-    backgroundColor: Colors.White,
   },
 });
 

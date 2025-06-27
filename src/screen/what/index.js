@@ -24,6 +24,7 @@ import {
   SALARY_FREQYENCYS_API,
 } from '../../ducks/app';
 import {useDispatch} from 'react-redux';
+import {formatCurrency} from './helper';
 
 const isDarkMode = datahandler.getAppTheme();
 
@@ -92,8 +93,13 @@ const What = ({navigation, route}) => {
             if (res?.data?.employee_type) {
               console.log(
                 '🚀 ~ getNotificationData ~ res?.data:',
-                res?.data?.salary_between,
+                res?.data,
               );
+              const salary_between = formatCurrency(
+                res?.data?.salary_between,
+                'USD',
+              );
+              const salary_and = formatCurrency(res?.data?.salary_and, 'USD');
               setJobsData(res?.data);
               setStateData(prev => ({
                 ...prev,
@@ -106,7 +112,7 @@ const What = ({navigation, route}) => {
                   name: res?.data?.employee_type,
                 },
                 selectedposition: {
-                  id: res?.data?.industry_id,
+                  id: res?.data?.position_looking_for_id,
                   name: res?.data?.position_looking_for,
                 },
                 selectedlevel: {
@@ -131,12 +137,9 @@ const What = ({navigation, route}) => {
               }));
               formObj.setValue(
                 'between',
-                res?.data?.salary_between > 0 && res?.data?.salary_between,
+                res?.data?.salary_between > 0 && salary_between,
               );
-              formObj.setValue(
-                'and',
-                res?.data?.salary_and > 0 && res?.data?.salary_and,
-              );
+              formObj.setValue('and', res?.data?.salary_and > 0 && salary_and);
               formObj.setValue(
                 'negotiable',
                 res?.data?.salary_negotiable == 1 ? true : false,
@@ -253,7 +256,7 @@ const What = ({navigation, route}) => {
     if (!validateFields()) return;
 
     const {and, between, currency, negotiable} = values;
-    console.log("🚀 ~ What ~ values:", values)
+    console.log('🚀 ~ What ~ values:', values);
     const formdata = {
       preferable_industry_id: perID,
       industry_id: statedata.selectedindustry?.id,
@@ -267,12 +270,20 @@ const What = ({navigation, route}) => {
       location_for_job: 1,
     };
 
-    if (between !== 'false') {
-      formdata.salary_between = between;
+    const isValidValue = value =>
+      value !== null &&
+      value !== undefined &&
+      value !== '' &&
+      value !== 'false' &&
+      value !== 'null' &&
+      value !== 'undefined';
+
+    if (isValidValue(between)) {
+      formdata.salary_between = String(between).replace(/,/g, '');
     }
 
-    if (and!== 'false') {
-      formdata.salary_and = and;
+    if (isValidValue(and)) {
+      formdata.salary_and = String(and).replace(/,/g, '');
     }
 
     if (statedata.frequencyvalue?.name) {
@@ -287,7 +298,7 @@ const What = ({navigation, route}) => {
       PREFERABLE_INDUSTRY_API.request({
         payloadApi: formdata,
         cb: res => {
-          if (isFromKeyFalse) {
+          if (isFromKeyFalse == true) {
             NavigationService.navigate(StackNav.Where, {
               key: true,
               perID: perID,
@@ -490,6 +501,7 @@ const What = ({navigation, route}) => {
           isDarkMode={isDarkMode}
           cuntomStyle={styles.cuntomStyle}
           label="Between"
+          issalary={true}
           {...betweenProps}
         />
         <TextInputCustom
@@ -497,6 +509,7 @@ const What = ({navigation, route}) => {
           isDarkMode={isDarkMode}
           cuntomStyle={styles.cuntomStyle}
           label="And"
+          issalary={true}
           {...andProps}
         />
       </View>

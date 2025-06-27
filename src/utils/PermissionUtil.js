@@ -1,14 +1,14 @@
 /** @format */
 
-import { check, PERMISSIONS, RESULTS, request } from 'react-native-permissions';
-import { Platform, Alert, Linking } from 'react-native';
+import {check, PERMISSIONS, RESULTS, request} from 'react-native-permissions';
+import {Platform, Alert, Linking, PermissionsAndroid} from 'react-native';
 
-import { Util } from './index';
-
+import {Util} from './index';
+const androidVersion = parseInt(Platform.Version, 10);
 class PermissionUtil {
   // types define
 
-  types = { GALLERY: 'gallery', CAMERA: 'camera' };
+  types = {GALLERY: 'gallery', CAMERA: 'camera'};
 
   // gallery permissions
   cameraPermission =
@@ -18,13 +18,15 @@ class PermissionUtil {
 
   // gallery permissions
   galleryPermission =
-    Platform.OS === 'android'
+    Platform.OS === 'android' && androidVersion >= 33
+      ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+      : Platform.OS === 'android'
       ? PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE
       : PERMISSIONS.IOS.PHOTO_LIBRARY;
 
   // check permissions gallery and camera
   checkPermission = (type, callback) => {
-    console.log("🚀 ~ getPermissionTitleAndDescription ~ type:", type)
+    console.log('🚀 ~ getPermissionTitleAndDescription ~ type:', type);
     const permission = this.getPermissionFromType(type);
 
     check(permission)
@@ -81,7 +83,6 @@ class PermissionUtil {
 
   // ger permission title and description from type
   getPermissionTitleAndDescription = type => {
-
     // get os
     const os = Platform.OS;
     // if type is gallery
@@ -104,28 +105,28 @@ class PermissionUtil {
           : 'Open Settings => Select Permissions => Select Camera => Allow only while using app',
       };
     }
-    return { title: '', description: '' };
+    return {title: '', description: ''};
   };
 
   // open settings modal
   openSettingModal = type => {
-    console.log("🚀 ~ getPermissionTitleAndDescription ~ type:", type)
+    console.log('🚀 ~ getPermissionTitleAndDescription ~ type:', type);
 
     // get title and desription from type
-    const { title, description } = this.getPermissionTitleAndDescription(type);
+    const {title, description} = this.getPermissionTitleAndDescription(type);
 
     // show alert
     Alert.alert(
       title,
       description,
       [
-        { text: 'Cancel', style: 'cancel' },
+        {text: 'Cancel', style: 'cancel'},
         {
           text: 'Open Settings',
           onPress: () => Linking.openSettings(),
         },
       ],
-      { cancelable: false },
+      {cancelable: false},
     );
   };
 }

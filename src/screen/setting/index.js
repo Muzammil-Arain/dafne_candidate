@@ -55,10 +55,11 @@ const Setting = ({navigation}) => {
     });
 
     // Clear all AsyncStorage except LOGIN_USER
-    const keysToKeep = [LocalStoragekey.LOGIN_USER]; // Keep LOGIN_USER
+    const keysToKeep = [LocalStoragekey.LOGIN_USER, LocalStoragekey.FCM_TOKEN]; // Keep LOGIN_USER
     const allKeys = await AsyncStorage.getAllKeys();
     const keysToRemove = allKeys.filter(key => !keysToKeep.includes(key));
-
+    console.log('🚀 ~ handleLogOut ~ keysToRemove:', keysToRemove);
+    return;
     await AsyncStorage.multiRemove(keysToRemove);
 
     dispatch({

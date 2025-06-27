@@ -32,6 +32,9 @@ import {useDispatch, useSelector} from 'react-redux';
 import {FIREBASE_CHAT_KEY} from '../../config/AppConfig';
 import {SEND_NOTIFICATION_API, UPLOAD_MEDIA_API} from '../../ducks/app';
 import FastImageComponent from '../../components/FastImage';
+import {handleSendNotification} from '../../utils/Notification';
+import ImageViewing from 'react-native-image-viewing';
+import {Image} from 'react-native';
 
 const {width, height} = Dimensions.get('window');
 
@@ -46,7 +49,8 @@ const App = ({navigation, route}) => {
   const [allMsg, setAllMsg] = useState([]);
   const [sendmodal, setSendModal] = useState(false);
   const [msgsendloading, setMsgSendLoading] = useState(false);
-
+  const [visible, setIsVisible] = useState(false);
+  const [imageUri, setImageUri] = useState('');
   const chatCollectionIdRef = useRef();
   const chatRoomDetailsRef = useRef();
   const saveCollectionId = id => (chatCollectionIdRef.current = id);
@@ -88,71 +92,73 @@ const App = ({navigation, route}) => {
   // }, [navigation]);
 
   useEffect(() => {
-  const getMessagesAndListen = async () => {
-    const userId = selectedUserdata?.id;
-    if (!userId || !chatroomid) return;
+    const getMessagesAndListen = async () => {
+      const userId = selectedUserdata?.id;
+      if (!userId || !chatroomid) return;
 
+      const firstQueryResult = await firestore()
+        .collection(FIREBASE_CHAT_KEY)
+        .where('chatroomid', '==', chatroomid)
+        .get();
 
-    const firstQueryResult = await firestore()
-      .collection(FIREBASE_CHAT_KEY)
-      .where('chatroomid', '==', chatroomid)
-      .get();
+      if (firstQueryResult.empty) {
+        return;
+      }
 
-    if (firstQueryResult.empty) {
-      return;
-    }
+      const docId = firstQueryResult.docs[0].id;
+      saveCollectionId(docId);
 
-    const docId = firstQueryResult.docs[0].id;
-    saveCollectionId(docId);
+      // Set up real-time listener
+      const unsubscribe = firestore()
+        .collection(FIREBASE_CHAT_KEY)
+        .doc(docId)
+        .collection('msg')
+        .orderBy('createdAt', 'desc')
+        .onSnapshot(snapshot => {
+          const nextMsg = [];
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.createdAt?.toDate) {
+              nextMsg.push({
+                _id: data._id || doc.id,
+                text: data.text || '',
+                createdAt: data.createdAt.toDate(),
+                user: {
+                  _id: data.user?._id,
+                  name: data.user?.name || 'Unknown',
+                  avatar: data.user?.avatar || '',
+                },
+                image: data.image || null,
+                video: data.video || null,
+              });
+            }
+          });
 
-    // Set up real-time listener
-    const unsubscribe = firestore()
-      .collection(FIREBASE_CHAT_KEY)
-      .doc(docId)
-      .collection('msg')
-      .orderBy('createdAt', 'desc')
-      .onSnapshot(snapshot => {
-        const nextMsg = [];
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          if (data.createdAt?.toDate) {
-            nextMsg.push({
-              _id: data._id || doc.id,
-              text: data.text || '',
-              createdAt: data.createdAt.toDate(),
-              user: {
-                _id: data.user?._id,
-                name: data.user?.name || 'Unknown',
-                avatar: data.user?.avatar || '',
-              },
-              image: data.image || null,
-              video: data.video || null,
-            });
+          if (nextMsg.length > 0) {
+            setAllMsg(nextMsg);
+
+            // Reset unread count for current user if viewing
+            firestore()
+              .collection(FIREBASE_CHAT_KEY)
+              .doc(docId)
+              .update({
+                [`unreadCount_${userData?.id}`]: 0,
+              });
           }
         });
 
-        if (nextMsg.length > 0) {
-          setAllMsg(nextMsg);
+      // Save ref to unsubscribe
+      chatRoomDetailsRef.current = unsubscribe;
+    };
 
-          // Reset unread count for current user if viewing
-          firestore().collection(FIREBASE_CHAT_KEY).doc(docId).update({
-            [`unreadCount_${userData?.id}`]: 0,
-          });
-        }
-      });
+    getMessagesAndListen();
 
-    // Save ref to unsubscribe
-    chatRoomDetailsRef.current = unsubscribe;
-  };
-
-  getMessagesAndListen();
-
-  return () => {
-    if (chatRoomDetailsRef.current) chatRoomDetailsRef.current();
-    chatCollectionIdRef.current = null;
-    chatRoomDetailsRef.current = null;
-  };
-}, [chatroomid, selectedUserdata?.id]);
+    return () => {
+      if (chatRoomDetailsRef.current) chatRoomDetailsRef.current();
+      chatCollectionIdRef.current = null;
+      chatRoomDetailsRef.current = null;
+    };
+  }, [chatroomid, selectedUserdata?.id]);
 
   const getMsgs = useCallback(async () => {
     const userId = selectedUserdata?.id;
@@ -307,8 +313,15 @@ const App = ({navigation, route}) => {
       await handleSendNotification(
         dispatch,
         receiverId,
-        `${userData?.first_name} ${userData?.last_name}`,
+        projectName,
         textMessage === '' ? 'attachment' : textMessage,
+        // {
+        //   id: userData.id,
+        //   profile: userData?.profile,
+        //   project_name: projectName,
+        //   screen_name: 'Chat',
+        //   chatroom_id: chatroomid,
+        // },
       );
 
       if (sendmodal) setSendModal(false);
@@ -564,6 +577,25 @@ const App = ({navigation, route}) => {
           messages={allMsg || []}
           onSend={messages => handleSent(messages)}
           renderBubble={renderBubble}
+          renderMessageImage={props => (
+            <TouchableOpacity
+              onPress={() => {
+                if (props?.currentMessage?.image) {
+                  setImageUri(props?.currentMessage.image);
+                  setIsVisible(true);
+                }
+              }}>
+              <Image
+                source={{uri: props.currentMessage.image}}
+                style={{
+                  width: ms(200),
+                  height: ms(130),
+                  borderRadius: 10,
+                  marginBottom: ms(5),
+                }}
+              />
+            </TouchableOpacity>
+          )}
           renderInputToolbar={renderInputToolbar}
           renderActions={renderActions}
           isCustomViewBottom={true}
@@ -572,6 +604,15 @@ const App = ({navigation, route}) => {
           }}
           scrollToBottom
           scrollToBottomComponent={scrollToBottomComponent}
+          textInputStyle={{
+            color: Colors.Black,
+          }}
+        />
+        <ImageViewing
+          images={[{uri: imageUri}]}
+          imageIndex={0}
+          visible={visible}
+          onRequestClose={() => setIsVisible(false)}
         />
       </View>
       {/* </KeyboardAvoidingView> */}

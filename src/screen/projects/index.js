@@ -30,6 +30,7 @@ import {
   removeNotificationListener,
 } from '../../utils/NotificationListner';
 import {NOTIFICATION_KEYS} from '../../config/AppConfig';
+import {handleSendNotification} from '../../utils/Notification';
 
 const isDarkMode = datahandler.getAppTheme();
 
@@ -210,6 +211,9 @@ const Projects = ({navigation}) => {
 
   // Project Item Component
   const ProjectItem = React.memo(({item, dispatch, onPress}) => {
+    console.log('====================================');
+    console.log(item, 'itemitemitemitemitemitemitem');
+    console.log('====================================');
     const isDisabled = !item?.industry || item?.current_location;
 
     const jobDetails = useMemo(
@@ -251,9 +255,10 @@ const Projects = ({navigation}) => {
           {!item?.icon && (
             <TouchableOpacity
               onPress={() =>
-                NavigationService.navigate(StackNav.ProjectNotifications, {
-                  id: item.id,
-                })
+                // NavigationService.navigate(StackNav.ProjectNotifications, {
+                //   id: item.id,
+                // })
+                handleSendNotification(dispatch, 41, 'title', 'message')
               }>
               <Image
                 source={Images.icon.poistion_bell}
@@ -299,7 +304,7 @@ const Projects = ({navigation}) => {
             ShowLinear={false}
             // isloading={item?.loading}
             onPress={() =>
-              NavigationService.navigate(StackNav.What, {
+              NavigationService.push(StackNav.What, {
                 perID: item.id,
                 isFromKeyFalse: true,
               })
@@ -333,12 +338,17 @@ const Projects = ({navigation}) => {
       <Header />
 
       {jobsData.length == 0 ? (
-        <View style={{
-          flex:1,
-          justifyContent:'center',
-          alignItems:'center'
-        }}>
-          <ScaleText fontSize={Fonts.size.size_17} fontFamily={Fonts.type.Bold} text={'No Jobs Found'} />
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <ScaleText
+            fontSize={Fonts.size.size_17}
+            fontFamily={Fonts.type.Bold}
+            text={'No Jobs Found'}
+          />
         </View>
       ) : (
         <FlatList

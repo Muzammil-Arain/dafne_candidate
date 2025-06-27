@@ -153,7 +153,7 @@ const Login = ({navigation}) => {
           setStateData(prev => ({...prev, isLoading: false}));
         },
         cberr: async error => {
-          if (error.message == 'Your account is in review') {
+          if (error.message.toLowerCase() === 'your account is in review') {
             setModalVisible(true);
           } else {
             Util.showMessage(error?.message);

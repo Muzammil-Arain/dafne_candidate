@@ -32,6 +32,7 @@ const isDarkMode = datahandler.getAppTheme();
 const Where = ({navigation, route}) => {
   const dispatch = useDispatch();
   const {perID, jobsData} = route?.params ?? '';
+  console.log("🚀 ~ Where ~ jobsData:", jobsData)
   const isfoucsed = useIsFocused();
 
   const [statedata, setStateData] = useState({

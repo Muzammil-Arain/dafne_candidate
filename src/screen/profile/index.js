@@ -219,6 +219,7 @@ const Profile = ({navigation, route}) => {
     }, []),
   );
 
+
   const handleGetAPISData = () => {
     const apiRequests = [
       // {
@@ -413,6 +414,7 @@ const Profile = ({navigation, route}) => {
       NavigationService.navigate(StackNav.MyBackground, {
         data: userProfileData,
       });
+      return;
     }
 
     setStateData(prev => ({
@@ -493,11 +495,9 @@ const Profile = ({navigation, route}) => {
     });
 
     // Clear all AsyncStorage except LOGIN_USER
-    const keysToKeep = [LocalStoragekey.LOGIN_USER]; // Keep LOGIN_USER
+    const keysToKeep = [LocalStoragekey.LOGIN_USER, LocalStoragekey.FCM_TOKEN]; // Keep LOGIN_USER
     const allKeys = await AsyncStorage.getAllKeys();
     const keysToRemove = allKeys.filter(key => !keysToKeep.includes(key));
-    console.log('🚀 ~ handleLogOut ~ keysToRemove:', keysToRemove);
-
     await AsyncStorage.multiRemove(keysToRemove);
 
     dispatch({
@@ -655,8 +655,7 @@ const Profile = ({navigation, route}) => {
             const isExpanded = numOfLinesMap[subIndex] === 0;
             return (
               <TouchableOpacity
-                style={{
-                }}
+                style={{}}
                 onPress={() => {
                   NavigationService.navigate(StackNav.WebViewScreen, {
                     title: val.title,

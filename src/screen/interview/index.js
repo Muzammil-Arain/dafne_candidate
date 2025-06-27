@@ -291,6 +291,8 @@ const Interview = ({navigation, route}) => {
         {/* Job Details */}
         {InterViewData?.length > 0 ? (
           InterViewData?.map(value => {
+            console.log(value, 'valuevaluevaluevaluevaluevaluevaluevalue');
+
             const interviewId = value?.interview?.id;
             const selected = interviewInterest[interviewId];
             return (
@@ -352,6 +354,7 @@ const Interview = ({navigation, route}) => {
                         StackNav.InterviewInvitations,
                         {
                           data: value,
+                          type: true,
                         },
                       )
                     }
@@ -455,7 +458,9 @@ const Interview = ({navigation, route}) => {
               location = val.project.requirement.location,
               datetime = val.project.requirement.start_date,
               meeting_type = val.interview.meeting_type,
-              meeting_mode = val.interview.meeting_mode,
+              meeting_mode = val.interview.meeting_type === 'phone_call'
+                ? val?.client?.phone
+                : val?.interview?.meeting_mode,
             } = val;
 
             const details = [
@@ -466,7 +471,7 @@ const Interview = ({navigation, route}) => {
                 label: 'Salary range:',
                 value: `$${val.project.academic_requirement.salary_between} - $${val.project.academic_requirement.salary_and}`,
               },
-              {label: 'Date:', value: datetime},
+              {label: 'Start-Date:', value: datetime},
               meeting_type && {label: 'Meeting Type:', value: meeting_type},
               meeting_mode && {label: 'Meeting Mode:', value: meeting_mode}, // fixed condition
             ].filter(Boolean); // removes any `false` or `undefined` entries
@@ -506,16 +511,17 @@ const Interview = ({navigation, route}) => {
                     marginTop: ms(30),
                   }}>
                   <TouchableOpacity
-                    // onPress={() => {
-                    //   if (val.interview.status == 'detail_send') {
-                    //     NavigationService.navigate(
-                    //       StackNav.InterviewInvitations,
-                    //       {
-                    //         data: val,
-                    //       },
-                    //     );
-                    //   }
-                    // }}
+                    onPress={() => {
+                      if (val.interview.status == 'interview_scheduled') {
+                        NavigationService.navigate(
+                          StackNav.InterviewInvitations,
+                          {
+                            data: val,
+                            type: false,
+                          },
+                        );
+                      }
+                    }}
                     // disabled={
                     //   val.interview.status !== 'detail_send' ? true : false
                     // }

@@ -1,4 +1,10 @@
-import React, {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   Image,
   StyleSheet,
@@ -24,7 +30,7 @@ import {firebaseformatDate} from './helper';
 import {GET_CHATROOM_API} from '../../ducks/app';
 import {FIREBASE_CHAT_KEY} from '../../config/AppConfig';
 import {ms} from 'react-native-size-matters';
-import { useFocusEffect } from '@react-navigation/native';
+import {useFocusEffect} from '@react-navigation/native';
 
 const isDarkMode = datahandler.getAppTheme();
 
@@ -179,6 +185,7 @@ const Chat = ({navigation}) => {
 
     if (item.user) {
       const {firebaseKeys} = item;
+      console.log("🚀 ~ renderChatItem ~ firebaseKeys:", firebaseKeys)
       let projectName = item?.firebaseKeys?.project_name;
       let updatedTime =
         firebaseKeys?.createdAt && firebaseformatDate(firebaseKeys?.createdAt);
@@ -198,9 +205,9 @@ const Chat = ({navigation}) => {
             <View style={styles.chatItemContent}>
               <Image
                 source={{
-                  uri: item.user?.profile ?? Images.iconsource.dummyuserimage,
+                  uri: 'https://med.gov.bz/wp-content/uploads/2020/08/dummy-profile-pic.jpg',
                 }}
-                resizeMode="cover"
+                resizeMode="contain"
                 style={styles.avatar}
               />
               <View style={styles.chatContent}>
@@ -318,9 +325,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   avatar: {
-    width: 45,
-    height: 45,
-    borderRadius: 45 / 2,
+    width: ms(45),
+    height: ms(45),
+    borderRadius: 100,
+    backgroundColor: '#ccc',
   },
   chatContent: {
     flex: 1,

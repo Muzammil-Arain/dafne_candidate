@@ -18,7 +18,7 @@ const AccountReviewModal = ({visible, onClose}) => {
             review is complete.
           </Text>
           <TouchableOpacity onPress={onClose} style={styles.button}>
-            <Text style={styles.buttonText}>Okay</Text>
+            <Text style={styles.buttonText}>OK</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -47,6 +47,7 @@ const styles = ScaledSheet.create({
     fontWeight: 'bold',
     marginBottom: '10@ms',
     textAlign: 'center',
+    color:Colors.Black
   },
   message: {
     fontSize: '14@ms',
