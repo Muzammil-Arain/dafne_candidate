@@ -63,7 +63,7 @@ export default function BottomTab() {
         tabBarActiveTintColor: Colors.DarkYellow,
         tabBarStyle: {
           height: Util.isPlatformIOS()
-            ? height * 0.1
+            ? height * 0.1 // Dynamic height based on screen height
             : Metrics.ratio(80),
           backgroundColor: isDarkMode ? Colors.Black_21 : Colors.Whiite_FA,
         },

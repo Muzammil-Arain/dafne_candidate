@@ -1,8 +1,8 @@
 import React from 'react';
 import ImagePickerModal from '../ImagePickerModal';
-import { PickImageFromGallery, TakeCameraPicture } from '../../utils/Gallery';
+import {PickImageFromGallery, TakeCameraPicture} from '../../utils/Gallery';
 
-export const HandleImagePicker = ({ onImagePicked, onClose, media, modalVisible }) => {
+const HandleImagePicker = ({onImagePicked, onClose, media, modalVisible}) => {
   const handleTakePhoto = async () => {
     modalVisible = false;
     try {
@@ -10,7 +10,6 @@ export const HandleImagePicker = ({ onImagePicked, onClose, media, modalVisible 
       if (image) {
         // Only proceed if an image is successfully selected
         onImagePicked(image);
-        return image;
       } else {
         console.log('User cancelled the camera');
       }
@@ -31,9 +30,9 @@ export const HandleImagePicker = ({ onImagePicked, onClose, media, modalVisible 
       }
     } catch (error) {
       if (error.message === 'User cancelled image picker') {
-        console.log('User cancelled the handleChooseFromGallery image picker');
+        console.log('User cancelled the image picker');
       } else {
-        console.error('Error picking image handleChooseFromGallery from gallery:', error);
+        console.error('Error picking image from gallery:', error);
       }
     }
   };

@@ -1,95 +1,55 @@
-import {View} from 'react-native';
+import { View} from 'react-native';
 import React, {useLayoutEffect} from 'react';
 import {screenOptions} from '../../naviagtor/config';
 import {AppButton, Background, ScaleText} from '../../common';
 import {TextInputNative} from '../../components';
 import {useHookForm, ValidationSchema} from '../../utils/ValidationUtil';
 import {Colors, Fonts} from '../../theme';
-import {NavigationService, Util} from '../../utils';
+import {NavigationService} from '../../utils';
 import {StackNav} from '../../naviagtor/stackkeys';
-import {ms, ScaledSheet} from 'react-native-size-matters';
+import { ms, ScaledSheet } from 'react-native-size-matters';
 import datahandler from '../../helper/datahandler';
-import {useDispatch} from 'react-redux';
-import {JOB_TITLE_API, PROFILE_PERCENTAGE_API} from '../../ducks/app';
 
 const isDarkMode = datahandler.getAppTheme();
 
-const ProjectName = ({navigation, route}) => {
-  const {key} = route?.params ?? '';
-  const [formObj, jobProps] = useHookForm(['job'], {}, ValidationSchema.job);
-  const dispatch = useDispatch();
+const ProjectName = ({navigation}) => {
+  const [formObj, passwordProps] = useHookForm(
+    ['password'],
+    {},
+    ValidationSchema.logIn,
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions(
       screenOptions(
-        {route: null, navigation},
+        { route: null, navigation },
         () => navigation.goBack(),
         isDarkMode,
-        'Name your ideal position!',
-      ),
+        'Name your ideal position!'
+      )
     );
   }, [navigation, isDarkMode]);
-
-  const handleSubmit = formObj.handleSubmit(values => {
-    const jobName = values?.job;
-    if (!jobName) return;
-
-    const payload = {job_name: jobName};
-
-    const onJobTitleAdded = res => {
-      if (!res?.id) return;
-
-      const perID = res.id;
-      Util.showMessage('Job title added successfully', 'success');
-
-      if (key) {
-        datahandler.setisNewProject(key);
-        NavigationService.navigate(StackNav.SelectOne, {perID});
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append('percentage', `SelectOne / ${null} / ${perID}`);
-
-      dispatch(
-        PROFILE_PERCENTAGE_API.request({
-          payloadApi: formData,
-          cb: () => {
-            NavigationService.navigate(StackNav.SelectOne, {perID});
-          },
-        }),
-      );
-    };
-
-    dispatch(
-      JOB_TITLE_API.request({
-        payloadApi: payload,
-        cb: onJobTitleAdded,
-      }),
-    );
-  });
 
   return (
     <Background isDarkMode={isDarkMode}>
       <View style={styles.formContainer}>
         <ScaleText
-          isDarkMode={isDarkMode}
+        isDarkMode={isDarkMode}
           textAlign="center"
           fontFamily={Fonts.type.Mediu}
-          text="Name your Position!"
+          text="Name your job!"
           fontSize={ms(18)}
         />
         <TextInputNative
-          isDarkMode={isDarkMode}
+        isDarkMode={isDarkMode}
           topSpaceLarge
           title="Name*"
-          {...jobProps}
+          {...passwordProps}
           customPlaceholder="name"
         />
         <View style={styles.buttonContainer}>
           <AppButton
-            type={'JOBS_TITLE'}
-            onPress={handleSubmit}
+            onPress={() => NavigationService.navigate(StackNav.SelectOne)}
             title="Continue"
           />
         </View>
@@ -102,19 +62,19 @@ export default ProjectName;
 
 const styles = ScaledSheet.create({
   formContainer: {
-    marginTop: '20@ms',
+    marginTop: '20@ms',  // Scaled vertical margin
     backgroundColor: isDarkMode ? Colors.more_black[900] : Colors.White,
-    paddingHorizontal: '20@ms',
-    paddingVertical: '40@ms',
+    paddingHorizontal: '20@ms',  // Scaled horizontal padding
+    paddingVertical: '40@ms',  // Scaled vertical padding
     borderRadius: 14,
     shadowColor: isDarkMode ? Colors.Whiite_B1 : Colors.Back_70,
     elevation: 10,
   },
   buttonContainer: {
-    marginTop: '20@ms',
+    marginTop: '20@ms',  // Scaled vertical margin
   },
   input: {
-    marginHorizontal: '20@ms',
-    marginTop: '20@ms',
+    marginHorizontal: '20@ms',  // Scaled horizontal margin
+    marginTop: '20@ms',  // Scaled vertical margin
   },
 });

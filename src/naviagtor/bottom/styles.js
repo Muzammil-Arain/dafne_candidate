@@ -22,7 +22,7 @@ export const styles = ScaledSheet.create({
     fontSize: '11@ms',
     color: Colors.Black_57,
     fontFamily: Fonts.type.Roman,
-    marginBottom: Platform.OS == 'android' ? '10@ms' : '-4@ms',
+    marginBottom: Platform.OS == 'android' ? '10@ms' : 0,
   },
   shortListIndicator: {
     position: 'absolute',

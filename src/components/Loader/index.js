@@ -7,11 +7,10 @@ import {View, StatusBar, ActivityIndicator, Image} from 'react-native';
 // import {getRequestFlag} from '../../ducks/requestFlags';
 import {Colors} from '../../theme';
 import styles from './styles';
-import { getRequestFlag } from '../../ducks/requestFlags';
 
 const Loader = ({type, showSpinner, showLoading}) => {
-  const requestFlags = useSelector(getRequestFlag(type));
-  // const requestFlags = false;
+  // const requestFlags = useSelector(getRequestFlag(type));
+  const requestFlags = false;
   const loading = requestFlags.loading || false;
 
   return loading || showLoading ? (
@@ -26,7 +25,7 @@ const Loader = ({type, showSpinner, showLoading}) => {
         isVisible={loading || showLoading}>
         <View style={styles.container}>
           {showSpinner && (
-            <ActivityIndicator animating size="large" color={Colors.DarkYellow} />
+            <ActivityIndicator animating size="large" color={Colors.pink} />
           )}
         </View>
       </Modal>

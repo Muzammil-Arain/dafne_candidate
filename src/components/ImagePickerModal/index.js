@@ -18,7 +18,7 @@ const ImagePickerModal = ({
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Choose an Option</Text>
           <TouchableOpacity style={styles.optionButton} onPress={onTakePhoto}>
-            <Text style={styles.optionText}>Open Camera </Text>
+            <Text style={styles.optionText}>Take Photo</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.optionButton}

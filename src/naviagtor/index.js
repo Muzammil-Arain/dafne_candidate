@@ -1,10 +1,11 @@
 // lib import
-import React, {useEffect, useState} from 'react';
-import {useDispatch, useSelector} from 'react-redux';
+import React from 'react';
+import {useSelector} from 'react-redux';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 
 // local import
+import DrawerNavigator from './drawer';
 import {screenOptions} from './config';
 import {NavigationService} from '../utils';
 import {getUserToken} from '../ducks/user';
@@ -13,19 +14,13 @@ import {getUserToken} from '../ducks/user';
 import {StackRoute} from '../screen';
 import {StackNav} from './stackkeys';
 import BottomTab from './bottom';
-import {loginAccessToken, sessionMantainAccessToken} from '../ducks/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {preloadGetAPIs} from '../utils/preloadGetAPIs';
 
 const Stack = createStackNavigator();
 
-function StackScreens(loginUser) {
-  const isUserExist = useSelector(sessionMantainAccessToken);
-
+function StackScreens() {
+  const isUserExist = useSelector(getUserToken);
   return (
-    <Stack.Navigator
-      initialRouteName={isUserExist ? 'AppStack' : 'Welcome'}
-      {...{screenOptions}}>
+    <Stack.Navigator initialRouteName={'Welcome'} {...{screenOptions}}>
       <Stack.Screen
         name="AppStack"
         options={{
@@ -42,11 +37,6 @@ function StackScreens(loginUser) {
         name={StackNav.EditProfile}
         component={StackRoute.EditProfile}
         options={{headerShown: true}}
-      />
-      <Stack.Screen
-        name={StackNav.GiftChat}
-        component={StackRoute.GiftChat}
-        options={{headerShown: false}}
       />
       <Stack.Screen
         name={StackNav.Welcome}
@@ -104,7 +94,7 @@ function StackScreens(loginUser) {
       <Stack.Screen
         name={StackNav.AuthProfile}
         component={StackRoute.AuthProfile}
-        options={{headerShown: true, gestureEnabled: false}}
+        options={{headerShown: true}}
       />
 
       <Stack.Screen
@@ -130,7 +120,7 @@ function StackScreens(loginUser) {
       <Stack.Screen
         name={StackNav.Profile}
         component={StackRoute.Profile}
-       options={{headerShown: true, gestureEnabled: false}}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name={StackNav.Projects}
@@ -140,16 +130,6 @@ function StackScreens(loginUser) {
       <Stack.Screen
         name={StackNav.Notifications}
         component={StackRoute.Notifications}
-        options={{headerShown: true}}
-      />
-      <Stack.Screen
-        name={StackNav.ProjectNotifications}
-        component={StackRoute.ProjectNotifications}
-        options={{headerShown: true}}
-      />
-       <Stack.Screen
-        name={StackNav.TermsandConditionScreen}
-        component={StackRoute.TermsandConditionScreen}
         options={{headerShown: true}}
       />
       <Stack.Screen
@@ -192,38 +172,14 @@ function StackScreens(loginUser) {
         component={StackRoute.ProjectDescription}
         options={{headerShown: false}}
       />
-      <Stack.Screen
-        name={StackNav.Setting}
-        component={StackRoute.Setting}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        name={StackNav.ChangePassword}
-        component={StackRoute.ChangePassword}
-        options={{headerShown: false}}
-      />
     </Stack.Navigator>
   );
 }
 
 const AppContainer = () => {
-  const [loginUser, setLoginUser] = useState(null);
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    const fetchLoginData = async () => {
-      const loginuser = await AsyncStorage.getItem('LOGIN');
-      if (loginUser == 'AppStack') {
-        // preloadGetAPIs(dispatch);
-        setLoginUser(loginuser);
-      }
-    };
-    fetchLoginData();
-  }, []);
-
   return (
     <NavigationContainer ref={NavigationService.navigationRef}>
-      <StackScreens loginUser={loginUser} />
+      <StackScreens />
     </NavigationContainer>
   );
 };

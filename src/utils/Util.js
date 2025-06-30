@@ -166,25 +166,11 @@ function toFixedIfNecessary(value, dp = 1) {
 /*
 type : 'danger' , 'success' , 'info'
 */
-function showMessage(message, type = 'danger', duration = 3000) {
+function showMessage(message, type = 'danger', duration = 2000) {
   flashMessageShow({
     message,
     type,
     duration,
-    titleStyle: {
-      fontSize: 16,
-      fontWeight: 'bold',
-    },
-    textStyle: {
-      fontSize: 14,
-    },
-    style: {
-      height: 90,
-      paddingVertical: 16,
-      paddingHorizontal: 20,
-    },
-    icon: type === 'success' ? 'success' : 'danger',
-    position: 'bottom',
   });
 }
 

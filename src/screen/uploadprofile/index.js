@@ -7,28 +7,28 @@ import {ProgressBar} from 'react-native-paper';
 import {ButtonView} from '../../components';
 import {NavigationService} from '../../utils';
 import {StackNav} from '../../naviagtor/stackkeys';
-import {ms, ScaledSheet} from 'react-native-size-matters';
+import { ms, ScaledSheet } from 'react-native-size-matters';
 import datahandler from '../../helper/datahandler';
 
-const isDarkMode = datahandler.getAppTheme();
+const isDarkMode  = datahandler.getAppTheme();
 
 const UploadProfile = ({navigation}) => {
-  const isNewProject = datahandler.getisNewProject();
+
   useLayoutEffect(() => {
     navigation.setOptions(
       screenOptions(
-        {route: null, navigation},
+        { route: null, navigation },
         () => navigation.goBack(),
-        isDarkMode,isNewProject ? 'Complete your project' :
-        'Complete your Profile',
-      ),
+        isDarkMode,
+       'Complete your Profile'
+      )
     );
   }, [navigation, isDarkMode]);
 
   return (
-    <Background isDarkMode={isDarkMode}>
+    <Background isDarkMode={isDarkMode}> 
       <ScaleText
-        isDarkMode={isDarkMode}
+      isDarkMode={isDarkMode}
         fontSize={ms(16)}
         textAlign={'center'}
         fontFamily={Fonts.type.Mediu}
@@ -37,11 +37,9 @@ const UploadProfile = ({navigation}) => {
         }
       />
       <ButtonView
-        onPress={() =>
-          NavigationService.navigate(StackNav.AuthPictureUpload, {
-            key: false,
-          })
-        }>
+        onPress={() => NavigationService.navigate(StackNav.AuthPictureUpload,{
+          key:false
+        })}>
         <Image
           source={Images.images.ImagePoster}
           resizeMode="contain"
@@ -49,34 +47,30 @@ const UploadProfile = ({navigation}) => {
         />
       </ButtonView>
       <ButtonView
-        onPress={() =>
-          NavigationService.navigate(StackNav.AuthVideoUpload, {
-            key: false,
-          })
-        }>
+        onPress={() => NavigationService.navigate(StackNav.AuthVideoUpload,{
+          key:false
+        })}>
         <Image
           source={Images.images.VideoPoster}
           resizeMode="contain"
           style={[styles.imageStyle, styles.imageMarginBottom]}
         />
       </ButtonView>
-     {!isNewProject && <ScaleText
-        isDarkMode={isDarkMode}
+      <ScaleText
+      isDarkMode={isDarkMode}
         fontFamily={Fonts.type.Mediu}
         fontSize={ms(16)}
         text={'Your Profile Status'}
         color={Colors.Black}
-      />}
-      {!isNewProject && (
-        <View style={styles.progressContainer}>
-          <ProgressBar
-            progress={0.8}
-            color="#387FF1"
-            style={styles.progressBar}
-          />
-          <Text style={styles.progressText}>80%</Text>
-        </View>
-      )}
+      />
+      <View style={styles.progressContainer}>
+        <ProgressBar
+          progress={0.8}
+          color="#387FF1"
+          style={styles.progressBar}
+        />
+        <Text style={styles.progressText}>80%</Text>
+      </View>
       <View style={{marginVertical: 10}}>
         {/* <AppButton
           onPress={() => NavigationService.navigate(StackNav.AuthPictureUpload)}
@@ -112,7 +106,7 @@ const styles = ScaledSheet.create({
   progressText: {
     color: isDarkMode ? Colors.White : Colors.Black,
     marginLeft: '10@ms', // Scaled marginLeft
-    fontFamily: Fonts.type.Black,
+    fontFamily:Fonts.type.Black,
     fontSize: Fonts.size.size_14,
   },
 });

@@ -6,9 +6,9 @@ const ImageIcon = ({source, tintColor, width, height, isDarkMode}) => {
   return (
     <Image
       source={source}
-      // tintColor={
-      //   tintColor ? tintColor : isDarkMode ? Colors.White : Colors.Black_21
-      // }
+      tintColor={
+        tintColor ? tintColor : isDarkMode ? Colors.White : Colors.Black_21
+      }
       resizeMode="contain"
       style={{
         width: width,

@@ -1,4 +1,4 @@
-import { create } from 'apisauce';
+import {create} from 'apisauce';
 
 import {
   API_LOG,
@@ -7,10 +7,9 @@ import {
   REQUEST_TYPE,
 } from '../config/WebService';
 
-import { Util } from '../utils';
-import { getUserToken } from '../ducks/user';
+import {Util} from '../utils';
+import {getUserToken} from '../ducks/user';
 import datahandler from '../helper/datahandler';
-import { loginAccessToken } from '../ducks/auth';
 
 const api = create({
   baseURL: BASE_URL,
@@ -18,18 +17,15 @@ const api = create({
 });
 
 async function callRequest(url, payload, headers = {}, parameter = '') {
-  console.log('====================================');
-  console.log(url, 'url urlurlurlurl');
-  console.log('====================================');
   // get attributes from url
 
-  const { type, access_token_required } = url;
+  const {type, access_token_required} = url;
   // set X-API-TOKEN
   if (access_token_required) {
     //headers[X_API_TOKEN] = 'def36000-f034-48f5-bf38-cd3d7cef2a5e';
     /*  const storeRef = DataHandler.getStore().getState();
     headers[X_API_TOKEN] = token; */
-    const token = loginAccessToken(datahandler.getStore().getState());
+    const token = getUserToken(datahandler.getStore().getState());
     headers.Authorization = `Bearer ${token}`;
   }
 
@@ -39,7 +35,7 @@ async function callRequest(url, payload, headers = {}, parameter = '') {
   headers['Content-Type'] = 'application/json';
 
   // init header object
-  const headerObject = { headers };
+  const headerObject = {headers};
 
   // init responseoc
   let response;
@@ -53,7 +49,7 @@ async function callRequest(url, payload, headers = {}, parameter = '') {
       response = await api.post(route, payload, headerObject);
       break;
     case REQUEST_TYPE.DELETE:
-      response = await api.delete(route, {}, { data: payload, ...headerObject });
+      response = await api.delete(route, {}, {data: payload, ...headerObject});
       //response = await api.delete(route, payload, headerObject);
       break;
     case REQUEST_TYPE.PUT:
@@ -122,8 +118,8 @@ function handleResponse(response, headers) {
       reject({
         message:
           response.data &&
-            response.data.message &&
-            typeof response.data.message === 'string'
+          response.data.message &&
+          typeof response.data.message === 'string'
             ? response.data.message
             : 'We are unable to connect to our server, please try again later.',
         statusCode: status,
@@ -138,4 +134,4 @@ function handleResponse(response, headers) {
   });
 }
 
-export { callRequest };
+export {callRequest};

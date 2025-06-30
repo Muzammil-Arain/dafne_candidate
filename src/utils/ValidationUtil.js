@@ -112,7 +112,6 @@ export const Validation = {
         .required(displayMsg(title, type))
     );
   },
-  termNotRequired: title => yup.bool().notRequired(),
 
   notRequired: () => yup.string().notRequired(),
 
@@ -223,7 +222,7 @@ export const Validation = {
   termNotRequired: title =>
     yup
       .bool()
-      // .oneOf([!false], displayMsg(title, ValidationType.term))
+      .oneOf([true], displayMsg(title, ValidationType.term))
       .notRequired(),
 };
 
@@ -271,12 +270,6 @@ export const ValidationSchema = {
     password: Validation.requiredWithoutTrim('Password'),
     term: Validation.termNotRequired('remember me'),
   }),
-  changeEmail: yup.object().shape({
-    email: Validation.email('Email'),
-  }),
-  job: yup.object().shape({
-    job: Validation.required('Job title'),
-  }),
   where: yup.object().shape({
     location: Validation.required('Location'),
     currentLocation: Validation.required('Current Location'),
@@ -286,40 +279,20 @@ export const ValidationSchema = {
     email: Validation.email('user name/Email'),
   }),
   what: yup.object().shape({
-    // industry: Validation.required('Industry'),
-    // type: Validation.required('Type'),
-    // position: Validation.required('Position'),
-    // experience: Validation.required('Experience'),
-    // between: Validation.required('Between'),
-    // and: Validation.required('And'),
-    // currency: Validation.required('Currency'),
-    negotiable: Validation.termNotRequired('Negotiable'),
-
-    between: yup.string().when('negotiable', {
-      is: false,
-      then: Validation.requiredWithoutTrim('Between'),
-      otherwise: Validation.notRequired(),
-    }),
-
-    and: yup.string().when('negotiable', {
-      is: false,
-      then: Validation.requiredWithoutTrim('And'),
-      otherwise: Validation.notRequired(),
-    }),
+    industry: Validation.required('Industry'),
+    type: Validation.required('Type'),
+    position: Validation.required('Position'),
+    experience: Validation.required('Experience'),
+    between: Validation.required('Between'),
+    and: Validation.required('And'),
+    frequency: Validation.required('Frequency'),
+    currency: Validation.required('Currency'),
+    negotiable: Validation.required('Negotiable'),
   }),
-
   projectName: yup.object().shape({
     projectname: Validation.requiredWithoutTrim('project name'),
   }),
-  getNotes: yup.object().shape({
-    notes: Validation.requiredWithoutTrim('notes'),
-  }),
   ResetPassword: yup.object().shape({
-    password: Validation.password('password'),
-    confirmPassword: Validation.passwordMatch('password', 'confirm password'),
-  }),
-  NewPassword: yup.object().shape({
-    oldpassword: Validation.password('old password'),
     password: Validation.password('password'),
     confirmPassword: Validation.passwordMatch('password', 'confirm password'),
   }),

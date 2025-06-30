@@ -9,8 +9,6 @@ import {Colors, Fonts} from '../../theme';
 import LottieView from 'lottie-react-native';
 import {ms} from 'react-native-size-matters';
 import ScaleText from '../ScaleText';
-import {useSelector} from 'react-redux';
-import {getRequestFlag} from '../../ducks/requestFlags';
 
 const AppButton = ({
   title,
@@ -23,11 +21,7 @@ const AppButton = ({
   imagesource,
   isDarkMode,
   ShowLinear = true,
-  type,
 }) => {
-  const requestFlags = useSelector(getRequestFlag(type));
-  const loading = requestFlags.loading || isloading;
-
   return (
     <ButtonView
       style={[
@@ -42,10 +36,8 @@ const AppButton = ({
           borderWidth: ShowLinear ? 0 : 1,
         },
       ]}
-      disabled={loading || disabled} // Disable if `loading`, `disabled`, or `type` exists
       onPress={onPress}
-      // disabled={isloading == true ? true : disabled}
-    >
+      disabled={disabled}>
       {/* <LinearGradient
         start={{x: 0.0, y: 0.25}}
         end={{x: 0.5, y: 1.0}}
@@ -65,7 +57,7 @@ const AppButton = ({
             borderColor: !ShowLinear && Colors.Black_02,
           },
         ]}> */}
-      {loading ? (
+      {isloading ? (
         <View
           style={{
             flexDirection: 'row',

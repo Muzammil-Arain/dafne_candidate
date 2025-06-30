@@ -27,10 +27,6 @@ export default {
     ImagePoster: require('../assets/images/image_poster.png'),
     VideoPoster: require('../assets/images/video_poster.png'),
     poster_background: require('../assets/images/poster_background.png'),
-    dummyprofile: require('../assets/images/dummy-profile-pic.jpg'),
-    Imagenotfound: require('../assets/images/Image-not-found.png'),
-    videonotfound: require('../assets/images/video_poster.webp')
-
   },
   icon: {
     bookmark: require('../assets/icon/bookmark.png'),

@@ -3,12 +3,12 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import { Text } from 'react-native';
+import {Text} from 'react-native';
 import styles from './styles';
 
-const InputError = ({ error, styleErr }) => {
+const InputError = ({error}) => {
   if (error) {
-    return <Text style={[styles.errorText, styleErr]}>{error}</Text>;
+    return <Text style={styles.errorText}>{error}</Text>;
   }
   return null;
 };
@@ -16,5 +16,5 @@ const InputError = ({ error, styleErr }) => {
 InputError.propTypes = {
   error: PropTypes.object,
 };
-InputError.defaultProps = { error: undefined };
+InputError.defaultProps = {error: undefined};
 export default InputError;

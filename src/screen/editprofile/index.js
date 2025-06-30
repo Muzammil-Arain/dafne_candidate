@@ -1,45 +1,27 @@
-import React, { useState, useRef, useLayoutEffect } from 'react';
-import { Image, StyleSheet, TextInput, View } from 'react-native';
-import { AppButton, Background, PopupModal, ScaleText } from '../../common';
-import { ButtonView } from '../../components';
-import { Colors, Images } from '../../theme';
-import { screenOptions } from '../../naviagtor/config';
-import { ms } from 'react-native-size-matters';
+import React, {useState, useRef, useLayoutEffect} from 'react';
+import {Image, Platform, TextInput, View} from 'react-native';
+import {AppButton, Background, ScaleText} from '../../common';
+import {ButtonView} from '../../components';
+import {Colors, Images, Metrics} from '../../theme';
+import {screenOptions} from '../../naviagtor/config';
+import { ms, ScaledSheet } from 'react-native-size-matters';
 import datahandler from '../../helper/datahandler';
-import { styles } from './styles';
-import { useDispatch, useSelector } from 'react-redux';
-import {
-  getUserData,
-  loginAccesToken,
-  LOGOUT_API,
-  UPDATE_PROFILE_API,
-} from '../../ducks/auth';
-import { } from '../../ducks/app';
-import { NavigationService, Util } from '../../utils';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LocalStoragekey } from '../../config/AppConfig';
 
-const EditProfile = ({ navigation }) => {
-  const userData = useSelector(getUserData);
-  const dispatch = useDispatch();
+const isDarkMode = datahandler.getAppTheme()
+
+const EditProfile = ({navigation}) => {
   const [profileData, setProfileData] = useState({
-    firstName: userData?.first_name || '',
-    lastName: userData?.last_name || '',
-    email: userData?.email || '',
-    phone: userData?.phone || '',
+    firstName: 'John Doe',
+    lastName: 'John Doe',
+    email: 'johndoe123@gmail.com',
+    phone: '+71 445 887 4456',
     companyName: 'Intellaxal Solution',
-    country: 'United States',
-    role: userData?.role || '',
-  });
-
-  const [state, setState] = useState({
-    logoutModal: false,
-    logoutLoading: false,
+    country: 'United State',
+    role: 'Pilot',
   });
 
   const [editableField, setEditableField] = useState(null);
   const inputRefs = useRef({});
-  const isDarkMode = datahandler.getAppTheme();
 
   useLayoutEffect(() => {
     navigation.setOptions(
@@ -47,70 +29,18 @@ const EditProfile = ({ navigation }) => {
         { route: null, navigation },
         () => navigation.goBack(),
         isDarkMode,
-        'Your Profile',
-      ),
+       'Your Profile',
+      )
     );
   }, [navigation, isDarkMode]);
 
   const handleSave = () => {
-    const formData = new FormData();
-    formData.append('first_name', profileData.firstName);
-    formData.append('last_name', profileData.lastName);
-    formData.append('email', profileData.email);
-    formData.append('phone', profileData.phone);
-    formData.append('designation', profileData.role);
-    // formData.append('profile_picture', profileData.password);
-    dispatch(
-      UPDATE_PROFILE_API.request({
-        payloadApi: formData,
-        cb: res => {
-          Util.showMessage('Profile updated successfully!', 'success');
-          setEditableField(null);
-          NavigationService.goBack();
-        },
-      }),
-    );
-  };
-
-  const handleLogOut = async () => {
-    setState(prev => ({ ...prev, logoutModal: false }));
-
-    // Dispatch token removal action
-    dispatch({
-      type: loginAccesToken.type,
-      payload: {
-        token: false,
-      },
-    });
-
-    // Clear all AsyncStorage except LOGIN_USER
-    const keysToKeep = [LocalStoragekey.LOGIN_USER]; // Keep LOGIN_USER
-    const allKeys = await AsyncStorage.getAllKeys();
-    const keysToRemove = allKeys.filter(key => !keysToKeep.includes(key));
-    console.log('🚀 ~ handleLogOut ~ keysToRemove:', keysToRemove);
-
-    await AsyncStorage.multiRemove(keysToRemove);
-
-    dispatch({
-      type: LOGOUT_API.type,
-    });
-
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Login' }],
-    });
-    datahandler.setisNewProject(null);
-    // Close the drawer and reset navigation again
-    return;
-    navigation.closeDrawer();
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Login' }],
-    });
+    console.log('Saved:', profileData);
+    setEditableField(null);
   };
 
   const handleChange = (field, value) => {
-    setProfileData(prev => ({ ...prev, [field]: value }));
+    setProfileData({...profileData, [field]: value});
   };
 
   const handleEditPress = field => {
@@ -124,25 +54,25 @@ const EditProfile = ({ navigation }) => {
     <View style={styles.fieldContainer}>
       <View style={styles.labelContainer}>
         <ScaleText
-          isDarkMode={isDarkMode}
+        isDarkMode={isDarkMode}
           color={Colors.Black_21}
           fontSize={ms(15)}
           text={label}
         />
-          <ButtonView onPress={() => handleEditPress(field)}>
-            <Image
-              tintColor={Colors.Black_8b}
-              source={Images.icon.Edit}
-              resizeMode="contain"
-              style={styles.editIcon}
-            />
-          </ButtonView>
+        <ButtonView onPress={() => handleEditPress(field)}>
+          <Image
+            tintColor={Colors.Black_8b}
+            source={Images.icon.Edit}
+            resizeMode="contain"
+            style={styles.editIcon}
+          />
+        </ButtonView>
       </View>
       <TextInput
         ref={ref => (inputRefs.current[field] = ref)}
         value={profileData[field]}
         onChangeText={value => handleChange(field, value)}
-        editable={editableField === field}
+        editable={editableField === field} // Make editable based on state
         style={styles.textInputStyle}
       />
     </View>
@@ -150,36 +80,56 @@ const EditProfile = ({ navigation }) => {
 
   return (
     <Background isDarkMode={isDarkMode}>
+      {/* <View style={styles.container}> */}
       {renderEditableField('First Name', 'firstName')}
       {renderEditableField('Last Name', 'lastName')}
       {renderEditableField('Email', 'email')}
       {renderEditableField('Phone', 'phone')}
-      {/* <ButtonView
-        onPress={() => setState(prev => ({ ...prev, logoutModal: true }))}>
-        <ScaleText
-          fontSize={ms(17)}
-          TextStyle={styles.logoutTextStyle}
-          text={'logout'}
-        />
-      </ButtonView> */}
-      <AppButton type={'UPDATE_PROFILE'} title="Update" onPress={handleSave} />
-      <PopupModal
-        isModalVisible={state.logoutModal}
-        showButtons={true}
-        ButtonTitleOne={'Yes'}
-        ButtonTitleTwo={'No'}
-        ButtonOneLoading={state.logoutLoading}
-        ButtonOnePress={() => handleLogOut()}
-        ButtonTwoPress={() => {
-          setState(prev => ({ ...prev, logoutModal: false }));
-        }}
-        title={'Logout Confirmation'}
-        description={
-          'Are you sure you want to log out? This will end your current session.'
-        }
-      />
+      {/* {renderEditableField('Company Name', 'companyName')} */}
+      {/* {renderEditableField('Country', 'country')} */}
+      {/* {renderEditableField('Your designation/role', 'role')} */}
+      <AppButton title={'Save'} onPress={handleSave} />
+      {/* </View> */}
     </Background>
   );
 };
 
 export default EditProfile;
+
+const styles = ScaledSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    borderTopRightRadius: '26@ms',
+    borderTopLeftRadius: '26@ms',
+    marginHorizontal:' -20@ms',
+    marginBottom:' -20@ms',
+    height: Metrics.screenHeight,
+  },
+  fieldContainer: {
+    marginBottom: '20@ms',
+  },
+  labelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '5@ms',
+  },
+  textInputStyle: {
+    borderWidth: 1,
+    backgroundColor: Colors.Whiite_FA,
+    fontSize: '14@ms',
+    color: Colors.Black,
+    paddingBottom:
+      Platform.OS === 'ios' ? Metrics.ratio(12) : Metrics.ratio(10),
+    paddingTop: Platform.OS === 'ios' ? Metrics.ratio(12) : Metrics.ratio(10),
+    paddingHorizontal: Metrics.ratio(15),
+    includeFontPadding: false,
+    borderColor: 'rgba(2, 2, 2, 0.15)',
+    borderRadius: 5,
+  },
+  editIcon: {
+    width: '17@ms',
+    height: '17@ms',
+  },
+});

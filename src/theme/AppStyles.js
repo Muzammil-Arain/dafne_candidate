@@ -14,9 +14,9 @@ export default ScaledSheet.create({
   },
   flashMessage: {
     fontFamily: Fonts.type.semiBold,
-    fontSize: '16@ms', 
+    fontSize: '16@ms',  // Scaling font size with ScaledSheet
     color: Colors.White,
-    lineHeight: '22@ms',
+    lineHeight: '22@ms', // Scaling line height with ScaledSheet
   },
   transformImage: {
     transform: [{ scaleX: I18nManager.isRTL ? -1 : 1 }],
@@ -27,17 +27,17 @@ export default ScaledSheet.create({
   headerStyle: {
     elevation: 0,
     height: Util.isPlatformIOS()
-      ? '120@ms' 
-      : '100@ms',
+      ? '150@ms'  // Scaled screen height (15% of screen height)
+      : '100@ms', // Scaled screen height (10% of screen height)
   },
   headerTitleStyle: {
     fontFamily: Fonts.type.Mediu,
     fontSize: '20@ms',
   },
   headerLeftContainerStyle: {
-    left: Util.isPlatformIOS() ? '10@ms' : '10@ms'
+    left: Util.isPlatformIOS() ? '10@ms' : '10@ms',  // Use scaled value for consistent padding
   },
   headerRightContainerStyles: {
-    right: Util.isPlatformIOS() ? '10@ms' : '10@ms'
+    right: Util.isPlatformIOS() ? '10@ms' : '10@ms',  // Use scaled value for consistent padding
   },
 });

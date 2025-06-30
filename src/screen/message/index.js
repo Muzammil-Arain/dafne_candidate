@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -17,18 +17,10 @@ import {VectorIcon} from '../../common';
 import {ButtonView} from '../../components';
 import {NavigationService} from '../../utils';
 import HandleImagePicker from '../../components/HandleImagePicker';
-import firestore from '@react-native-firebase/firestore';
-import {getUserData} from '../../ducks/auth';
 
 const {width, height} = Dimensions.get('window');
-export const Firebase_Chat_Key = 'Firebase-Chat';
 
 const Message = () => {
-  const value = {user: {id: '002'}};
-  const userData = useSelector(getUserData);
-  const chatRoomRef = useRef([]);
-  const [chatRoms, setChatRooms] = useState([]);
-  const formattedChatRooms = [...chatRoomRef.current];
   const [messages, setMessages] = useState([
     {
       id: '1',
@@ -54,77 +46,6 @@ const Message = () => {
   const [statedata, setStateData] = useState({
     showModal: false,
   });
-
-  useEffect(() => {
-    getFirebaseChatRooms();
-  }, []);
-
-  const getFirebaseChatRooms = async () => {
-    const chatroom_id = `${value.user.id}${userData?.id}`;
-    const userId = userData?.id;
-    console.log('🚀 ~ getFirebaseChatRooms ~ chatroom_id:', chatroom_id);
-    if (!userId) return;
-    try {
-      let getChatWithFirstQuery = firestore().collection(Firebase_Chat_Key);
-      getChatWithFirstQuery = await getChatWithFirstQuery.where(
-        'chatroomid',
-        '==',
-        chatroom_id,
-      );
-      let firstQueryResult = await getChatWithFirstQuery.get();
-
-      if (firstQueryResult._docs.length === 0) {
-        let getChatWithSecondQuery = await firestore()
-          .collection(Firebase_Chat_Key)
-          .where('reciverId', 'in', [`${value.user.id}`, `${userData?.id}`])
-          .where('senderId', '==', `${value.user.id}`)
-          .get();
-
-        if (getChatWithSecondQuery._docs.length == 0) return;
-        getChatWithSecondQuery.forEach(async doc => {
-          let messagesData = await firestore()
-            .collection(Firebase_Chat_Key)
-            .doc(doc.id)
-            .get();
-          console.log(messagesData._data, 'doc.id');
-          formattedChatRooms.push({
-            ...value,
-            firebaseKeys: {...messagesData._data, firebaseDocId: doc.id},
-          });
-          chatRoomRef.current = [
-            ...chatRoomRef.current,
-            {
-              ...value,
-              firebaseKeys: {...messagesData._data, firebaseDocId: doc.id},
-            },
-          ];
-          setChatRooms([...chatRoomRef.current]);
-        });
-      } else {
-        firstQueryResult.forEach(async doc => {
-          let messagesData = await firestore()
-            .collection(Firebase_Chat_Key)
-            .doc(doc.id)
-            .get();
-
-          formattedChatRooms.push({
-            ...value,
-            firebaseKeys: {...messagesData._data, firebaseDocId: doc.id},
-          });
-          chatRoomRef.current = [
-            ...chatRoomRef.current,
-            {
-              ...value,
-              firebaseKeys: {...messagesData._data, firebaseDocId: doc.id},
-            },
-          ];
-          setChatRooms([...chatRoomRef.current]);
-        });
-      }
-    } catch (error) {
-      console.log('🚀 ~ file: index.js ~ line 21 ~ getMsgs ~ error', error);
-    }
-  };
 
   const onImagePicked = image => {
     let imageUri = image.uri;

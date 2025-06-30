@@ -7,6 +7,7 @@ export default ScaledSheet.create({
     // fontFamily: Fonts.type.regular,
     fontSize: '12@ms',
     color: 'red',
-    marginLeft: '10@ms',
+    marginTop: '8@ms',
+    marginLeft: '10@@ms',
   },
 });

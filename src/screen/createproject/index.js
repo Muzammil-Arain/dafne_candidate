@@ -4,12 +4,11 @@ import {screenOptions} from '../../naviagtor/config';
 import {AppButton, Background, ScaleText} from '../../common';
 import {NavigationService} from '../../utils';
 import {StackNav} from '../../naviagtor/stackkeys';
-import {ms} from 'react-native-size-matters';
-import {Fonts} from '../../theme';
+import {ms, ScaledSheet} from 'react-native-size-matters';
+import {Colors, Fonts} from '../../theme';
 import {TextInputNative} from '../../components';
 import {useHookForm, ValidationSchema} from '../../utils/ValidationUtil';
 import datahandler from '../../helper/datahandler';
-import {styles} from './styles';
 
 const isDarkMode = datahandler.getAppTheme();
 
@@ -80,17 +79,12 @@ when looking at its layout.`;
         ) : (
           <View>
             <AppButton
-              onPress={() => NavigationService.goBack()}
+              onPress={() => setProjectType(true)}
               title={'Manage your project'}
             />
             <AppButton
               ShowLinear={false}
-              onPress={() =>
-                NavigationService.navigate(StackNav.ProjectName, {
-                  key: true,
-                })
-              }
-              // onPress={() => setProjectType(true)}
+              onPress={() => NavigationService.goBack()}
               title={'Create a new project'}
             />
           </View>
@@ -101,3 +95,22 @@ when looking at its layout.`;
 };
 
 export default CreateProject;
+
+const styles = ScaledSheet.create({
+  formContainer: {
+    marginTop: '-40@ms', // Scaled vertical margin
+    backgroundColor: Colors.White,
+    paddingHorizontal: '20@ms', // Scaled horizontal padding
+    paddingVertical: '40@ms', // Scaled vertical padding
+    borderRadius: 14,
+    shadowColor: Colors.Back_70,
+    elevation: 10,
+  },
+  buttonContainer: {
+    marginTop: '20@ms', // Scaled vertical margin
+  },
+  input: {
+    marginHorizontal: '20@ms', // Scaled horizontal margin
+    marginTop: '20@ms', // Scaled vertical margin
+  },
+});

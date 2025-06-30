@@ -1,11 +1,9 @@
 let store = null;
 let isInternetConnected = false;
 let topLoaderRef = null;
-let appTheme = false;
-let currentlocation = null
+let appTheme = null;
+
 let galleryModalRef = false;
-let RegisterResponce  = null;
-let isNewProject = false;
 
 const setAppTheme =(value) =>{
   appTheme = value
@@ -13,32 +11,6 @@ const setAppTheme =(value) =>{
 
 function getAppTheme() {
   return appTheme;
-}
-
-const setisNewProject =(value) =>{
-  isNewProject = value
-}
-
-function getisNewProject() {
-  return isNewProject;
-}
-
-
-const setRegistorRes =(value) =>{
-  RegisterResponce = value
-}
-
-function getRegistorRes() {
-  return RegisterResponce;
-}
-
-
-const setCurrentLocation = (value) => {
-  currentlocation = value
-}
-
-function getCurrentLocation(){
-  return currentlocation
 }
 
 function setStore(value) {
@@ -108,10 +80,4 @@ export default {
   //currently used
   setAppTheme,
   getAppTheme,
-  setRegistorRes,
-  getRegistorRes,
-  setCurrentLocation,
-  getCurrentLocation,
-  setisNewProject,
-  getisNewProject,
 };

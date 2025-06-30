@@ -14,15 +14,12 @@ import React, {useEffect, useRef, useMemo} from 'react';
 // import {NavigationService} from '../../utils';
 import {ButtonView} from '../../components';
 import VectorIcon from '../VectorIcon';
-import {ms, ScaledSheet} from 'react-native-size-matters';
-import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import { ms, ScaledSheet } from 'react-native-size-matters';
 
 const Background = ({
   isDarkMode,
   showHeader,
-  maincontentContainer,
   scrollDisable,
-  mainContainerStyle,
   showProfile,
   children,
 }) => {
@@ -47,13 +44,15 @@ const Background = ({
 
   useEffect(() => {
     StatusBar.setBarStyle(isDarkMode ? 'light-content' : 'dark-content', true);
-    StatusBar.setBackgroundColor(interpolatedBackgroundColor, true);
+    StatusBar.setBackgroundColor(
+      interpolatedBackgroundColor,
+      true,
+    );
   }, [isDarkMode]);
 
   return (
     <Animated.View
       style={[
-        mainContainerStyle,
         styles.container,
         {backgroundColor: interpolatedBackgroundColor},
       ]}>
@@ -98,28 +97,15 @@ const Background = ({
           // source={require('../../assets/images/background.png')}
         >
           <SafeAreaView style={styles.safeArea}>
-            {/* <ScrollView
+            <ScrollView
               keyboardShouldPersistTaps="handled"
               contentInsetAdjustmentBehavior="automatic"
               scrollEnabled={scrollDisable}
               style={styles.scrollView}
               showsVerticalScrollIndicator={false}
-              nestedScrollEnabled={true}> */}
-            <KeyboardAwareScrollView
-              innerRef={ref => {
-                console.log(ref);
-              }}
-              >
-              <View
-                style={[
-                  styles.contentContainer,
-                  maincontentContainer, // just add it directly
-                ]}>
-                {children}
-              </View>
-
-              {/* </ScrollView> */}
-            </KeyboardAwareScrollView>
+              nestedScrollEnabled={true}>
+              <View style={styles.contentContainer}>{children}</View>
+            </ScrollView>
           </SafeAreaView>
         </ImageBackground>
       </KeyboardAvoidingView>
@@ -129,6 +115,7 @@ const Background = ({
 
 export default Background;
 
+
 const styles = ScaledSheet.create({
   container: {
     flex: 1,
@@ -137,25 +124,25 @@ const styles = ScaledSheet.create({
     flex: 1,
   },
   header: {
-    height: '70@ms', // Scaled height
+    height: '70@ms',  // Scaled height
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: '20@ms', // Scaled padding
-    paddingTop: '10@ms', // Scaled padding
+    paddingHorizontal: '20@ms',  // Scaled padding
+    paddingTop: '10@ms',  // Scaled padding
   },
   iconButton: {
-    width: '35@ms', // Scaled width
-    height: '35@ms', // Scaled height
-    borderRadius: '100@ms', // Scaled border radius
+    width: '35@ms',  // Scaled width
+    height: '35@ms',  // Scaled height
+    borderRadius: '100@ms',  // Scaled border radius
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 3,
   },
   profileImage: {
-    width: '45@ms', // Scaled width
-    height: '45@ms', // Scaled height
-    borderRadius: '100@ms', // Scaled border radius
+    width: '45@ms',  // Scaled width
+    height: '45@ms',  // Scaled height
+    borderRadius: '100@ms',  // Scaled border radius
   },
   imageBackground: {
     flex: 1,
@@ -167,6 +154,6 @@ const styles = ScaledSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: '20@ms', // Scaled padding
+    padding: '20@ms',  // Scaled padding
   },
 });

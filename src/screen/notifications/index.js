@@ -1,21 +1,30 @@
-import { Image, View, FlatList, RefreshControl, StatusBar } from 'react-native';
-import React, { useState, useLayoutEffect, useEffect } from 'react';
-import { ScaleText } from '../../common';
-import { screenOptions } from '../../naviagtor/config';
-import { ButtonView, Loader } from '../../components';
-import { Colors, Fonts, Images } from '../../theme';
+import {
+  Image,
+  View,
+  FlatList,
+  RefreshControl,
+  StatusBar,
+} from 'react-native';
+import React, {useState, useLayoutEffect} from 'react';
+import {ScaleText} from '../../common';
+import {screenOptions} from '../../naviagtor/config';
+import {ButtonView} from '../../components';
+import {Colors, Fonts, Images} from '../../theme';
 import { ms, ScaledSheet } from 'react-native-size-matters';
 import datahandler from '../../helper/datahandler';
-import { GET_NOTIFICATION_API } from '../../ducks/app';
-import { useDispatch } from 'react-redux';
-import moment from 'moment';
 
 const isDarkMode = datahandler.getAppTheme();
 
-const Notifications = ({ navigation }) => {
-  const dispatch = useDispatch();
+const Notifications = ({navigation}) => {
   const [refreshing, setRefreshing] = useState(false);
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState([
+    'You received a new notification for Project 1 - SERVER',
+    'You received a new notification for Project 2 - DATABASE',
+    'You received a new notification for Project 3 - UI Update',
+    'You received a new notification for Project 4 - SERVER Maintenance',
+    // Add more notifications as needed
+  ]);
+
 
   useLayoutEffect(() => {
     navigation.setOptions(
@@ -24,35 +33,22 @@ const Notifications = ({ navigation }) => {
         () => navigation.goBack(),
         isDarkMode,
         'Notifications',
-        false,
-        false
-      ),
+      )
     );
   }, [navigation, isDarkMode]);
 
-  useEffect(() => {
-    getNotificationData();
-  }, [navigation]);
-
-  const getNotificationData = async () => {
-    dispatch(
-      GET_NOTIFICATION_API.request({
-        payloadApi: {},
-        cb: async res => {
-          setNotifications(res);
-        },
-      }),
-    );
-  };
-
-  const onRefresh = async () => {
+  const onRefresh = () => {
     setRefreshing(true);
-    await getNotificationData();
-    setRefreshing(false);
+    setTimeout(() => {
+      setNotifications(prevNotifications => [
+        'New notification added after refresh',
+        ...prevNotifications,
+      ]);
+      setRefreshing(false);
+    }, 2000);
   };
-  
 
-  const renderNotificationItem = ({ item }) => (
+  const renderNotificationItem = ({item}) => (
     <ButtonView>
       <View style={styles.notificationContainer}>
         <Image
@@ -64,13 +60,13 @@ const Notifications = ({ navigation }) => {
           <ScaleText
             fontFamily={Fonts.type.Mediu}
             fontSize={ms(14)}
-            color={isDarkMode ? Colors.Whiite_B1 : Colors.Black_02}
-            text={item?.data?.message}
+            color={isDarkMode ? Colors.Whiite_B1 :Colors.Black_02}
+            text={item}
           />
           <ScaleText
             fontSize={ms(12)}
             color={isDarkMode ? Colors.Whiite_CC : Colors.Back_70}
-            text={moment(item.updated_at).startOf('hour').fromNow()}
+            text={'01 day ago'}
           />
         </View>
       </View>
@@ -80,30 +76,14 @@ const Notifications = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor={Colors.White} />
-      <Loader type={'GET_NOTIFICATION'} />
-      {!notifications.length ? (
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-          <ScaleText
-            fontSize={ms(17)}
-            color={Colors.Black}
-            text={'No Notification Found'}
-          />
-        </View>
-      ) : (
-        <FlatList
-          data={notifications}
-          renderItem={renderNotificationItem}
-          keyExtractor={(item, index) => index.toString()}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        />
-      )}
+      <FlatList
+        data={notifications}
+        renderItem={renderNotificationItem}
+        keyExtractor={(item, index) => index.toString()}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      />
     </View>
   );
 };

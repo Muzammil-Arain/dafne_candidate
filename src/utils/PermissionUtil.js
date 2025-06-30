@@ -1,10 +1,10 @@
 /** @format */
 
 import {check, PERMISSIONS, RESULTS, request} from 'react-native-permissions';
-import {Platform, Alert, Linking, PermissionsAndroid} from 'react-native';
+import {Platform, Alert, Linking} from 'react-native';
 
 import {Util} from './index';
-const androidVersion = parseInt(Platform.Version, 10);
+
 class PermissionUtil {
   // types define
 
@@ -18,20 +18,17 @@ class PermissionUtil {
 
   // gallery permissions
   galleryPermission =
-    Platform.OS === 'android' && androidVersion >= 33
-      ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
-      : Platform.OS === 'android'
+    Platform.OS === 'android'
       ? PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE
       : PERMISSIONS.IOS.PHOTO_LIBRARY;
 
   // check permissions gallery and camera
   checkPermission = (type, callback) => {
-    console.log('🚀 ~ getPermissionTitleAndDescription ~ type:', type);
     const permission = this.getPermissionFromType(type);
 
     check(permission)
       .then(result => {
-        console.log('result permission', result);
+        console.log('result', result);
         switch (result) {
           case RESULTS.UNAVAILABLE:
             this.showAlert(
@@ -49,9 +46,6 @@ class PermissionUtil {
             });
             break;
           case RESULTS.LIMITED:
-            callback();
-            // this.openSettingModal(type);
-            break;
           case RESULTS.BLOCKED:
             this.openSettingModal(type);
             break;
@@ -110,8 +104,6 @@ class PermissionUtil {
 
   // open settings modal
   openSettingModal = type => {
-    console.log('🚀 ~ getPermissionTitleAndDescription ~ type:', type);
-
     // get title and desription from type
     const {title, description} = this.getPermissionTitleAndDescription(type);
 

@@ -6,14 +6,3 @@ export const allowIQKeyboardManager = true;
 export const enableDrakandLightTheme = true;
 // multipule langunage support
 export const enableMultipleLanguage = true;
-export const FIREBASE_CHAT_KEY = 'chatrooms';
-
-export const LocalStoragekey = {
-  FCM_TOKEN: 'FCM_TOKEN',
-  LOGIN_USER: 'USER_DATA',
-};
-
-export const NOTIFICATION_KEYS = {
-  Invitationreceived: 'Invitation received',
-  Interviewscheduled: 'Interview scheduled',
-};

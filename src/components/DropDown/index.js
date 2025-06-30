@@ -3,7 +3,7 @@ import {Colors} from '../../theme';
 import React, {useState} from 'react';
 import Modal from 'react-native-modal';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {View, TextInput, FlatList, TouchableOpacity, Text, SafeAreaView} from 'react-native';
+import {View, TextInput, FlatList, TouchableOpacity, Text} from 'react-native';
 import { ms } from 'react-native-size-matters';
 
 const DropDown = ({data, isModalVisible, handleHideModal, handlePress,isDarkMode}) => {
@@ -29,11 +29,7 @@ const DropDown = ({data, isModalVisible, handleHideModal, handlePress,isDarkMode
         right: 0,
       }}
       isVisible={isModalVisible}>
-     <SafeAreaView style={{
-      flex:1,
-      backgroundColor:Colors.White
-     }}>
-     <View style={[styles.modalDropDownStyle,{
+      <View style={[styles.modalDropDownStyle,{
         backgroundColor:isDarkMode ? Colors.more_black[900]:Colors.White
       }]}>
         <TouchableOpacity
@@ -76,7 +72,6 @@ const DropDown = ({data, isModalVisible, handleHideModal, handlePress,isDarkMode
           )}
         />
       </View>
-     </SafeAreaView>
     </Modal>
   );
 };

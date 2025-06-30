@@ -30,13 +30,6 @@ import AuthPictureUpload from './authpictureupload';
 import ProjectDescription from './projectdescription';
 import InterviewInvitations from './interviewinvitation';
 import CreateProjectDetails from './createprojectdetails';
-import WebViewScreen from './Webview';
-import GiftChat from './giftchat';
-import MyBackground from './MyBackground';
-import Setting from './setting';
-import ChangePassword from './changepassword';
-import ProjectNotifications from './projects/notification';
-import TermsandConditionScreen from './Webview/tandc';
 
 export const StackRoute = {
   //OuthStack
@@ -50,7 +43,6 @@ export const StackRoute = {
   //AppStack
   What,
   Chat,
-  Setting,
   More,
   Where,
   Message,
@@ -59,10 +51,8 @@ export const StackRoute = {
   SelectOne,
   Interview,
   EditProfile,
-  MyBackground,
   ProjectName,
   AuthProfile,
-  WebViewScreen,
   Notifications,
   CreateProject,
   UploadProfile,
@@ -74,8 +64,4 @@ export const StackRoute = {
   ProjectDescription,
   CreateProjectDetails,
   InterviewInvitations,
-  ChangePassword,
-  GiftChat,
-  ProjectNotifications,
-  TermsandConditionScreen
 };

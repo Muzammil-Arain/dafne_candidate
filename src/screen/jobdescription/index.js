@@ -3,56 +3,40 @@ import React, {useLayoutEffect} from 'react';
 import {Background, ScaleText} from '../../common';
 import {screenOptions} from '../../naviagtor/config';
 import {Animated, Dimensions, StyleSheet, View} from 'react-native';
-import {ms, ScaledSheet} from 'react-native-size-matters';
+import { ms, ScaledSheet } from 'react-native-size-matters';
 import datahandler from '../../helper/datahandler';
 
 const isDarkMode = datahandler.getAppTheme();
 const {width, height} = Dimensions.get('screen');
 
-const JobDescription = ({navigation, route}) => {
-  const InterViewData = route?.params?.data;
-  console.log(
-    '🚀 ~ InterviewInvitations ~ InterViewData:',
-    InterViewData?.project?.description
-    ,
-  );
+const JobDescription = ({navigation}) => {
+
   useLayoutEffect(() => {
     navigation.setOptions(
       screenOptions(
-        {route: null, navigation},
+        { route: null, navigation },
         () => navigation.goBack(),
         isDarkMode,
-        'View Job Description',
-      ),
+        'View Job Description'
+      )
     );
   }, [navigation, isDarkMode]);
+
 
   return (
     <Background isDarkMode={isDarkMode}>
       <Animated.View style={[styles.sectionMenu]}>
         {/* Job Details */}
         {[
-          {
-            label: 'Industry:',
-            value: InterViewData?.project?.requirement?.industry,
-          },
-          {
-            label: 'Job Type:',
-            value: InterViewData?.project?.requirement?.job_title,
-          },
-          {
-            label: 'Location:',
-            value: InterViewData?.project?.requirement?.location,
-          },
-          {
-            label: 'Salary range:',
-            value: `$${InterViewData?.project?.academic_requirement?.salary_between}`
-          },
-          {label: 'Date & Time:', value: InterViewData?.project?.requirement?.start_date},
+          {label: 'Industry:', value: 'Corporate'},
+          {label: 'Job Type:', value: 'Design'},
+          {label: 'Location:', value: 'NY 1011.Street 13 Newyork'},
+          {label: 'Salary range:', value: '$10,000'},
+          {label: 'Date & Time:', value: 'Aug, 15 2024 - 10:00 am'},
         ].map(({label, value}, index) => (
           <View key={index} style={styles.flexView}>
             <ScaleText
-              isDarkMode={isDarkMode}
+            isDarkMode={isDarkMode}
               fontFamily={Fonts.type.Mediu}
               TextStyle={{marginRight: 10}}
               fontSize={ms(14)}
@@ -85,7 +69,9 @@ const JobDescription = ({navigation, route}) => {
           fontFamily={Fonts.type.Roman}
           fontSize={ms(13)}
           color={Colors.Black_4A}
-          text={InterViewData?.project?.description}
+          text={
+            'It is a long established fact that a reader will distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters'
+          }
         />
       </Animated.View>
     </Background>
@@ -98,7 +84,7 @@ const styles = ScaledSheet.create({
   sectionMenu: {
     marginVertical: width * 0.02,
     padding: '20@ms',
-    backgroundColor: isDarkMode ? Colors.more_black[900] : Colors.White,
+    backgroundColor: isDarkMode ? Colors.more_black[900]: Colors.White,
     borderRadius: 10,
     shadowColor: Colors.Black,
     shadowOffset: {width: 0, height: 2},

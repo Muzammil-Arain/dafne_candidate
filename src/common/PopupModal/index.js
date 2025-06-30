@@ -2,9 +2,9 @@ import React from 'react';
 import AppButton from '../AppButton';
 import Modal from 'react-native-modal';
 import Lottie from 'lottie-react-native';
+import {StyleSheet, Text, View, Image, ActivityIndicator} from 'react-native';
 import {Colors, Fonts} from '../../theme';
 import {ScaledSheet} from 'react-native-size-matters';
-import {StyleSheet, Text, View, Image, ActivityIndicator} from 'react-native';
 
 const PopupModal = ({
   onClose,
@@ -134,7 +134,7 @@ const styles = ScaledSheet.create({
     fontSize: '12@ms',
     lineHeight: '15@ms',
     textAlign: 'center',
-    color: Colors.Black_02,
+    color: Colors.borderColor,
     textTransform: 'capitalize',
     marginBottom: '10@ms',
   },
@@ -156,7 +156,7 @@ const styles = ScaledSheet.create({
   flexBtnViewStyle: {
     height: '40@ms',
     borderRadius: 100,
-    width: '110@ms',
+    width: '115@ms',
     alignSelf: 'center',
   },
   lottieStyle: {

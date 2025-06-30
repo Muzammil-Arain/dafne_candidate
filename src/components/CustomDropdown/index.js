@@ -16,44 +16,29 @@ const CustomDropdown = ({
   selectedValue,
   mainContainerStyle,
   error,
-  maximumDate,
   isDarkMode,
-  keyboardType,
-  minimumDate,
-  onPressValue,
 }) => {
   const [modal, setModal] = useState(false);
 
   // Colors based on theme
-  const backgroundColor = isDarkMode ? Colors.more_black[900] : Colors.White;
+  const backgroundColor = isDarkMode
+    ? Colors.more_black[900]
+    : Colors.White;
   const textColor = isDarkMode ? Colors.Whiite_CC : Colors.Black_21;
   const borderColor = isDarkMode ? Colors.more_black[800] : Colors.Border;
   const LabelColor = isDarkMode ? Colors.more_black[800] : Colors.Black_02;
   const activeBorderColor = isDarkMode ? Colors.Yellow_Dark : Colors.Yellow;
 
   const customInput = () => {
-    const Label = (
-      <Text
-        style={{
-          color: LabelColor,
-          backgroundColor: isDarkMode ? 'transparent' : Colors.White,
-        }}>
-        {label}
-      </Text>
-    );
+    const Label = <Text style={{color:LabelColor,backgroundColor:isDarkMode ? 'transparent' : Colors.White}}>{label}</Text>;
     return (
       <ButtonView
-        style={[mainContainerStyle]}
+        style={[mainContainerStyle, {backgroundColor: isDarkMode ? 'transparent' :Colors.White}]}
         onPress={() => {
-          if (typeof onPressValue === 'function') {
-            onPressValue(); // pass argument if needed
-          } else {
-            setModal(true);
-          }
+          setModal(true);
         }}>
         <TextInput
-          keyboardType={keyboardType}
-          label={label}
+          label={Label}
           value={value === '' ? 'Select' : value}
           editable={false}
           mode="outlined"
@@ -61,7 +46,7 @@ const CustomDropdown = ({
           placeholder={placeholder}
           placeholderTextColor={textColor}
           style={{
-            // backgroundColor,
+            backgroundColor,
             fontSize: ms(12),
             color: textColor,
           }}
@@ -91,7 +76,7 @@ const CustomDropdown = ({
             isModalVisible={modal}
             handleHideModal={() => setModal(false)}
             handlePress={item => {
-              selectedValue(item);
+              selectedValue(item?.name);
               setModal(false);
             }}
             styleMainModel={{padding: 0, margin: 0}}
@@ -103,8 +88,6 @@ const CustomDropdown = ({
           />
         ) : (
           <DateTimePicker
-            maximumDate={maximumDate}
-            minimumDate={minimumDate}
             isDatePickerVisible={modal}
             onCancel={() => setModal(false)}
             onConfirm={item => {

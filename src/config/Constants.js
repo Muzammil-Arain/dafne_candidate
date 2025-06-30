@@ -1,7 +1,7 @@
 import {Colors} from '../theme';
 
 // Google Api Key
-export const GOOGLE_API_KEY = 'AIzaSyCCSWBjddLjz0JptO5iQtChlA-88Bl1sCs';
+export const GOOGLE_API_KEY = 'aaaa';
 
 // LocalStorage Keys
 export const LocalStoragekey = {
